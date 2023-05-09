@@ -1,0 +1,29 @@
+#+title: Notes
+
+* Character Selection Screen
+** Notable Bytes
+- $1B40: Player One selected character
+- $1B80: Player Two selected character
+
+** Character Codes
+| Character | Value |
+|-----------+-------|
+| Moon      | $1    |
+| Mercury   | $2    |
+| Mars      | $3    |
+| Jupiter   | $4    |
+| Venus     | $5    |
+| Uranus    | $6    |
+| Neptune   | $7    |
+| Pluto     | $8    |
+| Chibi     | $9    |
+
+** Notable Functions
+- CSS_UPDATE_P1_CHAR
+  On the CSS Screen, reads player one movement and sets the character code P1 is set to. Uses Character Selection Grid.
+
+* C0 Databanks
+- Character Selection Grid
+  Roughly C0AA51 - C0AA74
+  4 byte chunks for each character. The chunks are:
+  Up Down Left Right.

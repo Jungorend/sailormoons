@@ -8154,25 +8154,24 @@
                        BNE CODE_C0A57E                      ;C0A58B|D0F1    |C0A57E;  
                        RTS                                  ;C0A58D|60      |      ;  
                                                             ;      |        |      ;
-                                                            ;
-                                                            ;    From memory debugger, Y seems to *always* be $1B40
-                                                            ;    $1B40 seems to contain character selection. I believe $1B80 is for P2, but not used in this func.
-                                                            ;    $4 Jupiter, $3 Mars, $1 Moon, $9 Chibi, $2 Merc, $5 Venus
-                                                            ;    $8 Pluto, $7 Neptune, $6 Uranus
-                                                            ;
-                                                            ;      |        |      ;  
-          CODE_C0A58E: REP #$20                             ;C0A58E|C220    |      ; Read in Player one's character code,
-                       LDA.W $0000,Y                        ;C0A590|B90000  |000000; bit-shift it twice to the left, store in X.
-                       ASL A                                ;C0A593|0A      |      ;  
+
+
+
+    ;;    Reads player one's movement and changes the character code P1 is set to.
+    ;;    Does this by looking up the character you're presently on, and if any movement was pressed,
+    ;;    uses the character selection grid to set the new character
+          CSS_UPDATE_P1_CHAR: REP #$20                      ;C0A58E|C220    |      ;
+                       LDA.W $0000,Y                        ;C0A590|B90000  |000000; Y is always $1B40
+                       ASL A                                ;C0A593|0A      |      ; Read in player one's character code, bitshift it to the left twice, store in X.
                        ASL A                                ;C0A594|0A      |      ;  
                        TAX                                  ;C0A595|AA      |      ;  
-                       LDA.B [$FE]                          ;C0A596|A7FE    |0000FE; [$FE] is always set to $60, which is the controller input for player 1.
+                       LDA.B [$FE]                          ;C0A596|A7FE    |0000FE; $FE is always set to $60, which is the controller input for player 1.
                        BIT.W #$0800                         ;C0A598|890008  |      ;  
-                       BNE CODE_C0A5CD                      ;C0A59B|D030    |C0A5CD; Checks if any directions were pressed this frame.
+                       BNE CSS_P1_MOVE_LEFT                 ;C0A59B|D030    |C0A5CD; Checks if any directions were pressed this frame.
                        BIT.W #$0400                         ;C0A59D|890004  |      ;  
-                       BNE CODE_C0A5C2                      ;C0A5A0|D020    |C0A5C2;
+                       BNE CSS_P1_MOVE_DOWN                 ;C0A5A0|D020    |C0A5C2;
                        BIT.W #$0200                         ;C0A5A2|890002  |      ;  
-                       BNE CODE_C0A5B7                      ;C0A5A5|D010    |C0A5B7;
+                       BNE CSS_P1_MOVE_UP                   ;C0A5A5|D010    |C0A5B7;
                        BIT.W #$0100                         ;C0A5A7|890001  |      ;  
                        BEQ CODE_C0A5DE                      ;C0A5AA|F032    |C0A5DE;
                        LDA.W UNREACH_00AA50,X               ;C0A5AC|BD50AA  |00AA50;  If no directions pressed, return.
@@ -8181,19 +8180,19 @@
                        BRA CODE_C0A5D6                      ;C0A5B5|801F    |C0A5D6;  If Up: AA4D + X
                                                             ;      |        |      ;     Down: AA4E + X
                                                             ;      |        |      ;     Left: AA4F + X
-          CODE_C0A5B7: LDA.W UNREACH_00AA4F,X               ;C0A5B7|BD4FAA  |00AA4F;     Right: AA50 + X
+          CSS_P1_MOVE_UP: LDA.W UNREACH_00AA4F,X            ;C0A5B7|BD4FAA  |00AA4F;     Right: AA50 + X
                        AND.W #$00FF                         ;C0A5BA|29FF00  |      ;  
                        STA.W $0000,Y                        ;C0A5BD|990000  |000000;  Take only the lower byte and put it back in [$Y]
                        BRA CODE_C0A5D6                      ;C0A5C0|8014    |C0A5D6;  Then set [$78] = $4
                                                             ;      |        |      ;  
                                                             ;      |        |      ;  
-          CODE_C0A5C2: LDA.W UNREACH_00AA4E,X               ;C0A5C2|BD4EAA  |00AA4E;  
+          CSS_P1_MOVE_DOWN: LDA.W UNREACH_00AA4E,X          ;C0A5C2|BD4EAA  |00AA4E;
                        AND.W #$00FF                         ;C0A5C5|29FF00  |      ;  
                        STA.W $0000,Y                        ;C0A5C8|990000  |000000;  
                        BRA CODE_C0A5D6                      ;C0A5CB|8009    |C0A5D6;  
                                                             ;      |        |      ;  
                                                             ;      |        |      ;  
-          CODE_C0A5CD: LDA.W UNREACH_00AA4D,X               ;C0A5CD|BD4DAA  |00AA4D;  
+          CSS_P1_MOVE_LEFT: LDA.W UNREACH_00AA4D,X          ;C0A5CD|BD4DAA  |00AA4D;
                        AND.W #$00FF                         ;C0A5D0|29FF00  |      ;  
                        STA.W $0000,Y                        ;C0A5D3|990000  |000000;  
                                                             ;      |        |      ;  
@@ -8202,8 +8201,11 @@
                        STA.B $78                            ;C0A5DA|8578    |000078;  
                        REP #$20                             ;C0A5DC|C220    |      ;  
                                                             ;      |        |      ;  
-          CODE_C0A5DE: RTS                                  ;C0A5DE|60      |      ;  
-                                                            ;      |        |      ;  
+          CODE_C0A5DE: RTS                                  ;C0A5DE|60      |      ;
+
+
+
+
                        db $C2,$20,$B9,$00,$00,$0A,$0A,$AA   ;C0A5DF|        |      ;  
                        db $A7,$FE,$89,$00,$08,$D0,$30,$89   ;C0A5E7|        |0000FE;  
                        db $00,$04,$D0,$20,$89,$00,$02,$D0   ;C0A5EF|        |      ;  
@@ -8427,7 +8429,7 @@
                        LDY.W #$1B40                         ;C0A8FE|A0401B  |      ;  
                        LDA.W $0002,Y                        ;C0A901|B90200  |000002;  
                        BNE CODE_C0A90C                      ;C0A904|D006    |C0A90C;  
-                       JSR.W CODE_C0A58E                    ;C0A906|208EA5  |C0A58E;  
+                       JSR.W CSS_UPDATE_P1_CHAR                    ;C0A906|208EA5  |C0A58E;
                        JSR.W CODE_C0A630                    ;C0A909|2030A6  |C0A630;  
                                                             ;      |        |      ;  
           CODE_C0A90C: RTS                                  ;C0A90C|60      |      ;  
@@ -8438,7 +8440,7 @@
                        LDY.W #$1B80                         ;C0A911|A0801B  |      ;  
                        LDA.W $0002,Y                        ;C0A914|B90200  |000002;  
                        BNE CODE_C0A91F                      ;C0A917|D006    |C0A91F;  
-                       JSR.W CODE_C0A58E                    ;C0A919|208EA5  |C0A58E;  
+                       JSR.W CSS_UPDATE_P1_CHAR                    ;C0A919|208EA5  |C0A58E;
                        JSR.W CODE_C0A630                    ;C0A91C|2030A6  |C0A630;  
                                                             ;      |        |      ;  
           CODE_C0A91F: RTS                                  ;C0A91F|60      |      ;  
@@ -8588,12 +8590,23 @@
                        RTS                                  ;C0AA44|60      |      ;  
                                                             ;      |        |      ;  
                        db $03,$04,$05,$06,$FF,$01,$02,$FF   ;C0AA45|        |000004;  
-                                                            ;      |        |      ;  
-                       db $00,$00,$00,$00,$07,$09,$03,$02   ;C0AA4D|        |      ;  
-                       db $06,$02,$01,$05,$08,$03,$04,$01   ;C0AA55|        |000002;  
-                       db $04,$04,$04,$03,$05,$05,$02,$05   ;C0AA5D|        |000004;  
-                       db $06,$02,$07,$06,$07,$01,$08,$06   ;C0AA65|        |000002;  
-                       db $08,$03,$08,$07,$01,$09,$09,$09   ;C0AA6D|        |      ;  
+                                                            ;      |        |      ;
+
+                       db $00,$00,$00,$00                   ;C0AA4D|     ;
+
+    ;; Character Selection Grid
+    ;; Values are Up, Down, Left, Right
+                       db $07,$09,$03,$02   ; Moon
+                       db $06,$02,$01,$05   ; Mercury
+                       db $08,$03,$04,$01   ; Mars
+                       db $04,$04,$04,$03   ; Jupiter
+                       db $05,$05,$02,$05   ; Venus
+                       db $06,$02,$07,$06   ; Uranus
+                       db $07,$01,$08,$06   ; Neptune
+                       db $08,$03,$08,$07   ; Pluto
+                       db $01,$09,$09,$09   ; Chibi
+
+
                        db $00,$00,$00,$00,$01,$09,$03,$02   ;C0AA75|        |      ;  
                        db $02,$02,$01,$05,$03,$03,$04,$01   ;C0AA7D|        |      ;  
                        db $04,$04,$04,$03,$05,$05,$02,$05   ;C0AA85|        |000004;  
