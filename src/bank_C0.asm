@@ -8157,51 +8157,51 @@
 
 
 
-    ;;    Reads player one's movement and changes the character code P1 is set to.
+    ;;    Reads player's movement and changes the character code that player is set to.
     ;;    Does this by looking up the character you're presently on, and if any movement was pressed,
     ;;    uses the character selection grid to set the new character
-          CSS_UPDATE_P1_CHAR: REP #$20                      ;C0A58E|C220    |      ;
-                       LDA.W $0000,Y                        ;C0A590|B90000  |000000; Y is always $1B40
-                       ASL A                                ;C0A593|0A      |      ; Read in player one's character code, bitshift it to the left twice, store in X.
-                       ASL A                                ;C0A594|0A      |      ;  
-                       TAX                                  ;C0A595|AA      |      ;  
-                       LDA.B [$FE]                          ;C0A596|A7FE    |0000FE; $FE is always set to $60, which is the controller input for player 1.
-                       BIT.W #$0800                         ;C0A598|890008  |      ;  
-                       BNE CSS_P1_MOVE_LEFT                 ;C0A59B|D030    |C0A5CD; Checks if any directions were pressed this frame.
-                       BIT.W #$0400                         ;C0A59D|890004  |      ;  
-                       BNE CSS_P1_MOVE_DOWN                 ;C0A5A0|D020    |C0A5C2;
-                       BIT.W #$0200                         ;C0A5A2|890002  |      ;  
-                       BNE CSS_P1_MOVE_UP                   ;C0A5A5|D010    |C0A5B7;
-                       BIT.W #$0100                         ;C0A5A7|890001  |      ;  
-                       BEQ CODE_C0A5DE                      ;C0A5AA|F032    |C0A5DE;
-                       LDA.W UNREACH_00AA50,X               ;C0A5AC|BD50AA  |00AA50;  If no directions pressed, return.
-                       AND.W #$00FF                         ;C0A5AF|29FF00  |      ;  Otherwise:
-                       STA.W $0000,Y                        ;C0A5B2|990000  |000000;  
-                       BRA CODE_C0A5D6                      ;C0A5B5|801F    |C0A5D6;  If Up: AA4D + X
-                                                            ;      |        |      ;     Down: AA4E + X
-                                                            ;      |        |      ;     Left: AA4F + X
-          CSS_P1_MOVE_UP: LDA.W UNREACH_00AA4F,X            ;C0A5B7|BD4FAA  |00AA4F;     Right: AA50 + X
-                       AND.W #$00FF                         ;C0A5BA|29FF00  |      ;  
-                       STA.W $0000,Y                        ;C0A5BD|990000  |000000;  Take only the lower byte and put it back in [$Y]
-                       BRA CODE_C0A5D6                      ;C0A5C0|8014    |C0A5D6;  Then set [$78] = $4
-                                                            ;      |        |      ;  
-                                                            ;      |        |      ;  
-          CSS_P1_MOVE_DOWN: LDA.W UNREACH_00AA4E,X          ;C0A5C2|BD4EAA  |00AA4E;
-                       AND.W #$00FF                         ;C0A5C5|29FF00  |      ;  
-                       STA.W $0000,Y                        ;C0A5C8|990000  |000000;  
-                       BRA CODE_C0A5D6                      ;C0A5CB|8009    |C0A5D6;  
-                                                            ;      |        |      ;  
-                                                            ;      |        |      ;  
-          CSS_P1_MOVE_LEFT: LDA.W UNREACH_00AA4D,X          ;C0A5CD|BD4DAA  |00AA4D;
-                       AND.W #$00FF                         ;C0A5D0|29FF00  |      ;  
-                       STA.W $0000,Y                        ;C0A5D3|990000  |000000;  
-                                                            ;      |        |      ;  
-          CODE_C0A5D6: SEP #$20                             ;C0A5D6|E220    |      ;  
-                       LDA.B #$04                           ;C0A5D8|A904    |      ;  
-                       STA.B $78                            ;C0A5DA|8578    |000078;  
-                       REP #$20                             ;C0A5DC|C220    |      ;  
-                                                            ;      |        |      ;  
-          CODE_C0A5DE: RTS                                  ;C0A5DE|60      |      ;
+          CSS_UPDATE_CHAR: REP #$20
+                       LDA.W $0000,Y ; Y is the current player. $1B40 for player 1, $1B80 for player 2
+                       ASL A         ; X is the character code * 4 (the grid is 4 bytes each)
+                       ASL A
+                       TAX
+                       LDA.B [$FE] ; FE is set to the address of either $60 or $62, the controller input for player 1 or player 2
+                       BIT.W #$0800 ; These next lines check if left, down, up were pressed, or if right wasn't pressed.
+                       BNE CSS_MOVE_LEFT
+                       BIT.W #$0400
+                       BNE CSS_MOVE_DOWN
+                       BIT.W #$0200
+                       BNE CSS_MOVE_UP
+                       BIT.W #$0100
+                       BEQ CODE_C0A5DE
+                       LDA.W UNREACH_00AA50,X ;  If no directions pressed, return.
+                       AND.W #$00FF           ;  Otherwise, sets the character character code in the address Y points to
+                       STA.W $0000,Y          ; based on the character selection grid.
+                       BRA CODE_C0A5D6                      ; If Up: AA4D + X
+                                                            ;    Down: AA4E + X
+                                                            ;    Left: AA4F + X
+          CSS_MOVE_UP: LDA.W UNREACH_00AA4F,X               ;    Right: AA50 + X
+                       AND.W #$00FF
+                       STA.W $0000,Y                        ; Take only the lower byte and put it back in [$Y]
+                       BRA CODE_C0A5D6                      ; Then set [$78] = $4
+
+                                                      
+          CSS_MOVE_DOWN: LDA.W UNREACH_00AA4E,X
+                       AND.W #$00FF
+                       STA.W $0000,Y
+                       BRA CODE_C0A5D6
+
+                                                
+          CSS_MOVE_LEFT: LDA.W UNREACH_00AA4D,X
+                       AND.W #$00FF
+                       STA.W $0000,Y
+
+          CODE_C0A5D6: SEP #$20            
+                       LDA.B #$04
+                       STA.B $78
+                       REP #$20
+
+          CODE_C0A5DE: RTS            
 
 
 
@@ -8429,7 +8429,7 @@
                        LDY.W #$1B40                         ;C0A8FE|A0401B  |      ;  
                        LDA.W $0002,Y                        ;C0A901|B90200  |000002;  
                        BNE CODE_C0A90C                      ;C0A904|D006    |C0A90C;  
-                       JSR.W CSS_UPDATE_P1_CHAR                    ;C0A906|208EA5  |C0A58E;
+                       JSR.W CSS_UPDATE_CHAR                    ;C0A906|208EA5  |C0A58E;
                        JSR.W CODE_C0A630                    ;C0A909|2030A6  |C0A630;  
                                                             ;      |        |      ;  
           CODE_C0A90C: RTS                                  ;C0A90C|60      |      ;  
@@ -8440,7 +8440,7 @@
                        LDY.W #$1B80                         ;C0A911|A0801B  |      ;  
                        LDA.W $0002,Y                        ;C0A914|B90200  |000002;  
                        BNE CODE_C0A91F                      ;C0A917|D006    |C0A91F;  
-                       JSR.W CSS_UPDATE_P1_CHAR                    ;C0A919|208EA5  |C0A58E;
+                       JSR.W CSS_UPDATE_CHAR                    ;C0A919|208EA5  |C0A58E;
                        JSR.W CODE_C0A630                    ;C0A91C|2030A6  |C0A630;  
                                                             ;      |        |      ;  
           CODE_C0A91F: RTS                                  ;C0A91F|60      |      ;  
