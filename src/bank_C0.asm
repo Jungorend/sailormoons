@@ -4386,7 +4386,7 @@
                        PLP                                  ;C08132|28      |      ;  
                        RTS                                  ;C08133|60      |      ;  
                                                             ;      |        |      ;  
-                       db $53,$4D,$5F,$31,$20,$48,$41,$52   ;C08134|        |00004D;  
+                       db $53,$4D,$5F,$31,$20,$48,$41,$52   ;C08134|        |00004D;  SM_1 HARUKA 100%
                        db $55,$4B,$41,$20,$31,$30,$30,$25   ;C0813C|        |00004B;  
                                                             ;      |        |      ;  
           CODE_C08144: PHB                                  ;C08144|8B      |      ;  
@@ -4566,7 +4566,7 @@
                        db $8D,$30,$21,$A5,$56,$8D,$31,$21   ;C08345|        |002130;  
                        db $A5,$57,$8D,$32,$21,$60           ;C0834D|        |000057;  
                                                             ;      |        |      ;  
-          CODE_C08353: REP #$20                             ;C08353|C220    |      ;  
+          READ_PLAYER_INPUT: REP #$20                             ;C08353|C220    |      ;  Input is gathered here.
                        LDA.B $5C                            ;C08355|A55C    |00005C;  
                        STA.B $64                            ;C08357|8564    |000064;  
                        LDA.B $5E                            ;C08359|A55E    |00005E;  
@@ -4574,7 +4574,7 @@
                        SEP #$20                             ;C0835D|E220    |      ;  
                        LDA.W $4218                          ;C0835F|AD1842  |804218;  
                        STA.B $5C                            ;C08362|855C    |00005C;  
-                       LDA.W $4219                          ;C08364|AD1942  |804219;  
+                       LDA.W $4219                          ;C08364|AD1942  |804219;  Stores new button presses in $60/$61 and $62/$63 for P1 and P2
                        STA.B $5D                            ;C08367|855D    |00005D;  
                        LDA.W $421A                          ;C08369|AD1A42  |80421A;  
                        STA.B $5E                            ;C0836C|855E    |00005E;  
@@ -4707,10 +4707,10 @@
                        RTS                                  ;C08447|60      |      ;  
                                                             ;      |        |      ;  
                                                             ;      |        |      ;  
-          CODE_C08448: SEP #$30                             ;C08448|E230    |      ;  
+          SPRITES_TO_OAM: SEP #$30                             ;C08448|E230    |      ;  UPDATES THE OAM
                        STZ.W $2102                          ;C0844A|9C0221  |802102;  
-                       STZ.W $2103                          ;C0844D|9C0321  |802103;  
-                       STZ.W $4300                          ;C08450|9C0043  |804300;  
+                       STZ.W $2103                          ;C0844D|9C0321  |802103;  Copies $2002 bytes into OAM. Starts from $200.
+                       STZ.W $4300                          ;C08450|9C0043  |804300;
                        LDA.B #$04                           ;C08453|A904    |      ;  
                        STA.W $4301                          ;C08455|8D0143  |804301;  
                        LDA.B #$00                           ;C08458|A900    |      ;  
@@ -4724,7 +4724,7 @@
                        LDA.B #$02                           ;C0846C|A902    |      ;  
                        STA.W $4306                          ;C0846E|8D0643  |804306;  
                        LDA.B #$01                           ;C08471|A901    |      ;  
-                       STA.W $420B                          ;C08473|8D0B42  |80420B;  
+                       STA.W $420B                          ;C08473|8D0B42  |80420B;  ; Haven't read past here
                        STZ.W $2121                          ;C08476|9C2121  |802121;  
                        STZ.W $4300                          ;C08479|9C0043  |804300;  
                        LDA.B #$22                           ;C0847C|A922    |      ;  
@@ -6778,7 +6778,7 @@
                                                             ;      |        |      ;  
                                                             ;      |        |      ;  
        UNREACH_C098FD: db $CF,$99,$CF,$99,$85,$99,$05,$99   ;C098FD|        |99CF99;  
-                       JSR.W CODE_C08448                    ;C09905|204884  |C08448;  
+                       JSR.W SPRITES_TO_OAM                    ;C09905|204884  |C08448;
                        JSL.L CODE_9F9ED7                    ;C09908|22D79E9F|9F9ED7;  
                        SEP #$20                             ;C0990C|E220    |      ;  
                        LDA.W $1C40                          ;C0990E|AD401C  |801C40;  
@@ -6813,7 +6813,7 @@
                        db $D0,$1C,$DA,$08,$20,$4D,$8C,$28   ;C09968|        |C09986;  
                        db $FA,$E8,$E8,$E8,$E8,$80,$E4       ;C09970|        |      ;  
                                                             ;      |        |      ;  
-          CODE_C09977: JSR.W CODE_C08353                    ;C09977|205383  |C08353;  
+          CODE_C09977: JSR.W READ_PLAYER_INPUT                    ;C09977|205383  |C08353;
                        SEP #$20                             ;C0997A|E220    |      ;  
                        LDA.B $78                            ;C0997C|A578    |000078;  
                        STA.W $2142                          ;C0997E|8D4221  |802142;  
@@ -6852,12 +6852,12 @@
                        LDA.B $78                            ;C099E3|A578    |000078;  
                        STA.W $2142                          ;C099E5|8D4221  |802142;  
                        STZ.B $78                            ;C099E8|6478    |000078;  
-                       JSR.W CODE_C08448                    ;C099EA|204884  |C08448;  
+                       JSR.W SPRITES_TO_OAM                    ;C099EA|204884  |C08448;
                        JSR.W CODE_C09411                    ;C099ED|201194  |C09411;  
                        JSR.W CODE_C08C4D                    ;C099F0|204D8C  |C08C4D;  
                        JSR.W CODE_C08D4C                    ;C099F3|204C8D  |C08D4C;  
                        JSR.W CODE_C09576                    ;C099F6|207695  |C09576;  
-                       JSR.W CODE_C08353                    ;C099F9|205383  |C08353;  
+                       JSR.W READ_PLAYER_INPUT                    ;C099F9|205383  |C08353;
                                                             ;      |        |      ;  
           CODE_C099FC: SEP #$20                             ;C099FC|E220    |      ;  
                        LDA.B $6F                            ;C099FE|A56F    |00006F;  
@@ -6883,7 +6883,7 @@
                        STA.B $10                            ;C09A23|8510    |000010;  
                        STZ.B $98                            ;C09A25|6498    |000098;  
                                                             ;      |        |      ;  
-          CODE_C09A27: SEP #$20                             ;C09A27|E220    |      ;  
+          CODE_C09A27: SEP #$20                             ;C09A27|E220    |      ;  Doesn't seem to execute on CSS
                        LDA.B #$84                           ;C09A29|A984    |      ;  
                        PHA                                  ;C09A2B|48      |      ;  
                        PLB                                  ;C09A2C|AB      |      ;  
@@ -6949,7 +6949,7 @@
                        JMP.W CODE_C09A27                    ;C09A9D|4C279A  |C09A27;  
                                                             ;      |        |      ;  
                                                             ;      |        |      ;  
-          CODE_C09AA0: SEP #$20                             ;C09AA0|E220    |      ;  
+          CODE_C09AA0: SEP #$20                             ;C09AA0|E220    |      ; Doesn't seem to be executed on CSS 
                        LDA.B #$80                           ;C09AA2|A980    |      ;  
                        PHA                                  ;C09AA4|48      |      ;  
                        PLB                                  ;C09AA5|AB      |      ;  
@@ -7006,39 +7006,39 @@
                        db $F8,$F9,$08,$20,$48,$08,$E8,$F9   ;C09B0C|        |      ;  
                        db $48,$0E,$08                       ;C09B14|        |      ;  
                                                             ;      |        |      ;  
-          CODE_C09B17: REP #$10                             ;C09B17|C210    |      ;  
+          CODE_C09B17: REP #$10                             ;C09B17|C210    |      ;  8-bit accumulator, 16-bit indices
                        SEP #$20                             ;C09B19|E220    |      ;  
                                                             ;      |        |      ;  
-          CODE_C09B1B: LDX.B $98                            ;C09B1B|A698    |000098;  
-                       LDY.B $12                            ;C09B1D|A412    |000012;  
+          CODE_C09B1B: LDX.B $98                            ;C09B1B|A698    |000098; X = [$98], Y = [$12]
+                       LDY.B $12                            ;C09B1D|A412    |000012; [$0F] = 0
                        STZ.B $0F                            ;C09B1F|640F    |00000F;  
-                       LDA.W $0000,Y                        ;C09B21|B90000  |000000;  
-                       BMI CODE_C09B2D                      ;C09B24|3007    |C09B2D;  
-                       REP #$20                             ;C09B26|C220    |      ;  
-                       AND.W #$00FF                         ;C09B28|29FF00  |      ;  
+                       LDA.W $0000,Y                        ;C09B21|B90000  |000000; A = [$12] // Just one byte
+                       BMI CODE_C09B2D                      ;C09B24|3007    |C09B2D;
+                       REP #$20                             ;C09B26|C220    |      ;
+                       AND.W #$00FF                         ;C09B28|29FF00  |      ;
                        BRA CODE_C09B32                      ;C09B2B|8005    |C09B32;  
-                                                            ;      |        |      ;  
-                                                            ;      |        |      ;  
+                                                            ;      |        |      ; If [$12] >= $80, It will set A to $FFXX
+                                                            ;      |        |      ; otherwise it will set it to $00XX
           CODE_C09B2D: REP #$20                             ;C09B2D|C220    |      ;  
                        ORA.W #$FF00                         ;C09B2F|0900FF  |      ;  
                                                             ;      |        |      ;  
           CODE_C09B32: CLC                                  ;C09B32|18      |      ;  
-                       ADC.B $01                            ;C09B33|6501    |000001;  
-                       CMP.W #$0100                         ;C09B35|C90001  |      ;  
-                       BCC CODE_C09B41                      ;C09B38|9007    |C09B41;  
+                       ADC.B $01                            ;C09B33|6501    |000001;  A += 1
+                       CMP.W #$0100                         ;C09B35|C90001  |      ;  if A < 512 or A >= 65520, go to C09B41
+                       BCC CODE_C09B41                      ;C09B38|9007    |C09B41;
                        CMP.W #$FFF0                         ;C09B3A|C9F0FF  |      ;  
-                       BCS CODE_C09B41                      ;C09B3D|B002    |C09B41;  
-                       BRA CODE_C09BB7                      ;C09B3F|8076    |C09BB7;  
+                       BCS CODE_C09B41                      ;C09B3D|B002    |C09B41;
+                       BRA CODE_C09BB7                      ;C09B3F|8076    |C09BB7;  otherwise C09BB7
                                                             ;      |        |      ;  
                                                             ;      |        |      ;  
-          CODE_C09B41: STA.W $0200,X                        ;C09B41|9D0002  |000200;  
-                       AND.W #$FF00                         ;C09B44|2900FF  |      ;  
-                       BEQ CODE_C09B4B                      ;C09B47|F002    |C09B4B;  
-                       INC.B $0F                            ;C09B49|E60F    |00000F;  
+          CODE_C09B41: STA.W $0200,X                        ;C09B41|9D0002  |000200; Put A into [$200 + X]
+                       AND.W #$FF00                         ;C09B44|2900FF  |      ; If A < $FF00, increment [$0F]
+                       BEQ CODE_C09B4B                      ;C09B47|F002    |C09B4B;
+                       INC.B $0F                            ;C09B49|E60F    |00000F;
                                                             ;      |        |      ;  
-          CODE_C09B4B: LDA.W $0002,Y                        ;C09B4B|B90200  |000002;  
-                       BIT.W #$0080                         ;C09B4E|898000  |      ;  
-                       BNE CODE_C09B58                      ;C09B51|D005    |C09B58;  
+          CODE_C09B4B: LDA.W $0002,Y                        ;C09B4B|B90200  |000002;  A = [$2 + [Y]]
+                       BIT.W #$0080                         ;C09B4E|898000  |      ;  If the highest bit of the lower byte is set (probably $80 or greater)
+                       BNE CODE_C09B58                      ;C09B51|D005    |C09B58;  set A to $00XX, otherwise #FFXX
                        AND.W #$00FF                         ;C09B53|29FF00  |      ;  
                        BRA CODE_C09B5B                      ;C09B56|8003    |C09B5B;  
                                                             ;      |        |      ;  
@@ -7046,7 +7046,7 @@
           CODE_C09B58: ORA.W #$FF00                         ;C09B58|0900FF  |      ;  
                                                             ;      |        |      ;  
           CODE_C09B5B: CLC                                  ;C09B5B|18      |      ;  
-                       ADC.B $03                            ;C09B5C|6503    |000003;  
+                       ADC.B $03                            ;C09B5C|6503    |000003; A = A + 3
                        CMP.W #$00E0                         ;C09B5E|C9E000  |      ;  
                        BCC CODE_C09B6A                      ;C09B61|9007    |C09B6A;  
                        CMP.W #$FFF0                         ;C09B63|C9F0FF  |      ;  
@@ -7086,7 +7086,7 @@
                        ORA.W $0400,Y                        ;C09BA4|190004  |000400;  
                        STA.W $0400,Y                        ;C09BA7|990004  |000400;  
                                                             ;      |        |      ;  
-          CODE_C09BAA: LDX.B $98                            ;C09BAA|A698    |000098;  
+          CODE_C09BAA: LDX.B $98                            ;C09BAA|A698    |000098;  Add 4 to $98 then continue loop until it hits 512
                        INX                                  ;C09BAC|E8      |      ;  
                        INX                                  ;C09BAD|E8      |      ;  
                        INX                                  ;C09BAE|E8      |      ;  
@@ -7095,7 +7095,7 @@
                        BCS CODE_C09BCA                      ;C09BB3|B015    |C09BCA;  
                        STX.B $98                            ;C09BB5|8698    |000098;  
                                                             ;      |        |      ;  
-          CODE_C09BB7: LDY.B $12                            ;C09BB7|A412    |000012;  
+          CODE_C09BB7: LDY.B $12                            ;C09BB7|A412    |000012;  Add 6 to $12, if $0 is 1 go to return, otherwise jump to C09B1B
                        INY                                  ;C09BB9|C8      |      ;  
                        INY                                  ;C09BBA|C8      |      ;  
                        INY                                  ;C09BBB|C8      |      ;  
@@ -8113,7 +8113,7 @@
                        JSR.W CODE_C0A843                    ;C0A53D|2043A8  |C0A843;  
                                                             ;      |        |      ;  
           CODE_C0A540: JSR.W CODE_C0A6F5                    ;C0A540|20F5A6  |C0A6F5;  
-                       JSR.W CODE_C0A563                    ;C0A543|2063A5  |C0A563;  
+                       JSR.W CHECK_IF_START_PRESSED                    ;C0A543|2063A5  |C0A563;  
                        JSR.W CODE_C0ADF3                    ;C0A546|20F3AD  |C0ADF3;  
                        SEP #$20                             ;C0A549|E220    |      ;  
                        LDA.W $1B10                          ;C0A54B|AD101B  |001B10;  
@@ -8130,12 +8130,12 @@
                        RTS                                  ;C0A562|60      |      ;  
                                                             ;      |        |      ;  
                                                             ;      |        |      ;  
-          CODE_C0A563: REP #$30                             ;C0A563|C230    |      ;  
+          CHECK_IF_START_PRESSED: REP #$30                             ;C0A563|C230    |      ;  
                        LDA.B $60                            ;C0A565|A560    |000060;  
                        ORA.B $62                            ;C0A567|0562    |000062;  
-                       AND.W #$2000                         ;C0A569|290020  |      ;  
-                       BEQ CODE_C0A574                      ;C0A56C|F006    |C0A574;  
-                       LDA.W #$00FF                         ;C0A56E|A9FF00  |      ;  
+                       AND.W #$2000                         ;C0A569|290020  |      ;  Store #$00FF in $1B12 if Start is pressed.
+                       BEQ CODE_C0A574                      ;C0A56C|F006    |C0A574;  Then Return.
+                       LDA.W #$00FF                         ;C0A56E|A9FF00  |      ;
                        STA.W $1B12                          ;C0A571|8D121B  |001B12;  
                                                             ;      |        |      ;  
           CODE_C0A574: RTS                                  ;C0A574|60      |      ;  
@@ -8153,32 +8153,38 @@
                        LDA.B $73                            ;C0A589|A573    |000073;  
                        BNE CODE_C0A57E                      ;C0A58B|D0F1    |C0A57E;  
                        RTS                                  ;C0A58D|60      |      ;  
+                                                            ;      |        |      ;
+                                                            ;
+                                                            ;    From memory debugger, Y seems to *always* be $1B40
+                                                            ;    $1B40 seems to contain character selection. I believe $1B80 is for P2, but not used in this func.
+                                                            ;    $4 Jupiter, $3 Mars, $1 Moon, $9 Chibi, $2 Merc, $5 Venus
+                                                            ;    $8 Pluto, $7 Neptune, $6 Uranus
+                                                            ;
                                                             ;      |        |      ;  
-                                                            ;      |        |      ;  
-          CODE_C0A58E: REP #$20                             ;C0A58E|C220    |      ;  
-                       LDA.W $0000,Y                        ;C0A590|B90000  |000000;  
+          CODE_C0A58E: REP #$20                             ;C0A58E|C220    |      ; Read in Player one's character code,
+                       LDA.W $0000,Y                        ;C0A590|B90000  |000000; bit-shift it twice to the left, store in X.
                        ASL A                                ;C0A593|0A      |      ;  
                        ASL A                                ;C0A594|0A      |      ;  
                        TAX                                  ;C0A595|AA      |      ;  
-                       LDA.B [$FE]                          ;C0A596|A7FE    |0000FE;  
+                       LDA.B [$FE]                          ;C0A596|A7FE    |0000FE; [$FE] is always set to $60, which is the controller input for player 1.
                        BIT.W #$0800                         ;C0A598|890008  |      ;  
-                       BNE CODE_C0A5CD                      ;C0A59B|D030    |C0A5CD;  
+                       BNE CODE_C0A5CD                      ;C0A59B|D030    |C0A5CD; Checks if any directions were pressed this frame.
                        BIT.W #$0400                         ;C0A59D|890004  |      ;  
-                       BNE CODE_C0A5C2                      ;C0A5A0|D020    |C0A5C2;  
+                       BNE CODE_C0A5C2                      ;C0A5A0|D020    |C0A5C2;
                        BIT.W #$0200                         ;C0A5A2|890002  |      ;  
-                       BNE CODE_C0A5B7                      ;C0A5A5|D010    |C0A5B7;  
+                       BNE CODE_C0A5B7                      ;C0A5A5|D010    |C0A5B7;
                        BIT.W #$0100                         ;C0A5A7|890001  |      ;  
-                       BEQ CODE_C0A5DE                      ;C0A5AA|F032    |C0A5DE;  
-                       LDA.W UNREACH_00AA50,X               ;C0A5AC|BD50AA  |00AA50;  
-                       AND.W #$00FF                         ;C0A5AF|29FF00  |      ;  
+                       BEQ CODE_C0A5DE                      ;C0A5AA|F032    |C0A5DE;
+                       LDA.W UNREACH_00AA50,X               ;C0A5AC|BD50AA  |00AA50;  If no directions pressed, return.
+                       AND.W #$00FF                         ;C0A5AF|29FF00  |      ;  Otherwise:
                        STA.W $0000,Y                        ;C0A5B2|990000  |000000;  
-                       BRA CODE_C0A5D6                      ;C0A5B5|801F    |C0A5D6;  
-                                                            ;      |        |      ;  
-                                                            ;      |        |      ;  
-          CODE_C0A5B7: LDA.W UNREACH_00AA4F,X               ;C0A5B7|BD4FAA  |00AA4F;  
+                       BRA CODE_C0A5D6                      ;C0A5B5|801F    |C0A5D6;  If Up: AA4D + X
+                                                            ;      |        |      ;     Down: AA4E + X
+                                                            ;      |        |      ;     Left: AA4F + X
+          CODE_C0A5B7: LDA.W UNREACH_00AA4F,X               ;C0A5B7|BD4FAA  |00AA4F;     Right: AA50 + X
                        AND.W #$00FF                         ;C0A5BA|29FF00  |      ;  
-                       STA.W $0000,Y                        ;C0A5BD|990000  |000000;  
-                       BRA CODE_C0A5D6                      ;C0A5C0|8014    |C0A5D6;  
+                       STA.W $0000,Y                        ;C0A5BD|990000  |000000;  Take only the lower byte and put it back in [$Y]
+                       BRA CODE_C0A5D6                      ;C0A5C0|8014    |C0A5D6;  Then set [$78] = $4
                                                             ;      |        |      ;  
                                                             ;      |        |      ;  
           CODE_C0A5C2: LDA.W UNREACH_00AA4E,X               ;C0A5C2|BD4EAA  |00AA4E;  
@@ -8438,7 +8444,7 @@
           CODE_C0A91F: RTS                                  ;C0A91F|60      |      ;  
                                                             ;      |        |      ;  
                                                             ;      |        |      ;  
-          CODE_C0A920: SEP #$30                             ;C0A920|E230    |      ;  
+          CODE_C0A920: SEP #$30                             ;C0A920|E230    |      ;  TOREAD
                        LDA.B #$38                           ;C0A922|A938    |      ;  
                        STA.B $01                            ;C0A924|8501    |000001;  
                        STZ.B $02                            ;C0A926|6402    |000002;  
@@ -8475,7 +8481,7 @@
                        RTS                                  ;C0A96A|60      |      ;  
                                                             ;      |        |      ;  
                                                             ;      |        |      ;  
-          CODE_C0A96B: SEP #$30                             ;C0A96B|E230    |      ;  
+          CODE_C0A96B: SEP #$30                             ;C0A96B|E230    |      ;  TOREAD
                        LDA.B #$68                           ;C0A96D|A968    |      ;  
                        STA.B $01                            ;C0A96F|8501    |000001;  
                        STZ.B $02                            ;C0A971|6402    |000002;  
@@ -11658,12 +11664,12 @@
                        BRA CODE_C0D516                      ;C0D4C7|804D    |C0D516;  
                                                             ;      |        |      ;  
                        STZ.W $420C                          ;C0D4C9|9C0C42  |80420C;  
-                       JSR.W CODE_C08448                    ;C0D4CC|204884  |C08448;  
+                       JSR.W SPRITES_TO_OAM                    ;C0D4CC|204884  |C08448;
                        JSL.L CODE_809EF5                    ;C0D4CF|22F59E80|809EF5;  
                        JSR.W CODE_C08C4D                    ;C0D4D3|204D8C  |C08C4D;  
                        JSR.W CODE_C0D56F                    ;C0D4D6|206FD5  |C0D56F;  
                        JSR.W CODE_C0B3D7                    ;C0D4D9|20D7B3  |C0B3D7;  
-                       JSR.W CODE_C08353                    ;C0D4DC|205383  |C08353;  
+                       JSR.W READ_PLAYER_INPUT                    ;C0D4DC|205383  |C08353;
                        BRA CODE_C0D4E7                      ;C0D4DF|8006    |C0D4E7;  
                                                             ;      |        |      ;  
                        db $4C,$CF,$99,$4C,$85,$99           ;C0D4E1|        |C099CF;  
