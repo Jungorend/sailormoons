@@ -8160,48 +8160,50 @@
     ;;    Reads player's movement and changes the character code that player is set to.
     ;;    Does this by looking up the character you're presently on, and if any movement was pressed,
     ;;    uses the character selection grid to set the new character
+    ;;    Expects Y to be the address of the tested player, $FE to point to the input for the current frame for that player.
+    ;;    If it updates a player, it will set $78 to #$4.
           CSS_UPDATE_CHAR: REP #$20
                        LDA.W $0000,Y ; Y is the current player. $1B40 for player 1, $1B80 for player 2
                        ASL A         ; X is the character code * 4 (the grid is 4 bytes each)
                        ASL A
                        TAX
-                       LDA.B [$FE] ; FE is set to the address of either $60 or $62, the controller input for player 1 or player 2
-                       BIT.W #$0800 ; These next lines check if left, down, up were pressed, or if right wasn't pressed.
-                       BNE CSS_MOVE_LEFT
+                       LDA.B [$FE]   ; FE is set to the address of either $60 or $62, the controller input for player 1 or player 2
+                       BIT.W #$0800  ; These next lines check if left, down, up were pressed, or if right wasn't pressed.
+                       BNE CSS_MOVE_UP
                        BIT.W #$0400
                        BNE CSS_MOVE_DOWN
                        BIT.W #$0200
-                       BNE CSS_MOVE_UP
+                       BNE CSS_MOVE_LEFT
                        BIT.W #$0100
-                       BEQ CODE_C0A5DE
-                       LDA.W UNREACH_00AA50,X ;  If no directions pressed, return.
+                       BEQ CSS_UPDATE_CHAR_RETURN
+                       LDA.W CSS_GRID_RIGHT,X ;  If no directions pressed, return.
                        AND.W #$00FF           ;  Otherwise, sets the character character code in the address Y points to
                        STA.W $0000,Y          ; based on the character selection grid.
-                       BRA CODE_C0A5D6                      ; If Up: AA4D + X
-                                                            ;    Down: AA4E + X
-                                                            ;    Left: AA4F + X
-          CSS_MOVE_UP: LDA.W UNREACH_00AA4F,X               ;    Right: AA50 + X
+                       BRA CSS_UPDATE_CHAR_PUSH_CHANGES     ; If Up:    AA4D + X
+                                                            ;    Down:  AA4E + X
+                                                            ;    Left:  AA4F + X
+          CSS_MOVE_LEFT: LDA.W CSS_GRID_LEFT,X              ;    Right: AA50 + X
                        AND.W #$00FF
                        STA.W $0000,Y                        ; Take only the lower byte and put it back in [$Y]
-                       BRA CODE_C0A5D6                      ; Then set [$78] = $4
+                       BRA CSS_UPDATE_CHAR_PUSH_CHANGES     ; Then set [$78] = $4
 
                                                       
-          CSS_MOVE_DOWN: LDA.W UNREACH_00AA4E,X
+          CSS_MOVE_DOWN: LDA.W CSS_GRID_DOWN,X
                        AND.W #$00FF
                        STA.W $0000,Y
-                       BRA CODE_C0A5D6
+                       BRA CSS_UPDATE_CHAR_PUSH_CHANGES
 
                                                 
-          CSS_MOVE_LEFT: LDA.W UNREACH_00AA4D,X
+          CSS_MOVE_UP: LDA.W CSS_GRID_UP,X
                        AND.W #$00FF
                        STA.W $0000,Y
 
-          CODE_C0A5D6: SEP #$20            
+          CSS_UPDATE_CHAR_PUSH_CHANGES: SEP #$20
                        LDA.B #$04
                        STA.B $78
                        REP #$20
 
-          CODE_C0A5DE: RTS            
+          CSS_UPDATE_CHAR_RETURN: RTS
 
 
 

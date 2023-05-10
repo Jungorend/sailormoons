@@ -32,10 +32,10 @@
                        CODE_82C0D1 = $82C0D1                ;      |        |      ;  
                        CODE_82C10B = $82C10B                ;      |        |      ;  
                        CODE_82C144 = $82C144                ;      |        |      ;  
-                       UNREACH_00AA50 = $00AA50             ;      |        |      ;  
-                       UNREACH_00AA4F = $00AA4F             ;      |        |      ;  
-                       UNREACH_00AA4E = $00AA4E             ;      |        |      ;  
-                       UNREACH_00AA4D = $00AA4D             ;      |        |      ;  
+                       CSS_GRID_RIGHT = $00AA50
+                       CSS_GRID_LEFT  = $00AA4F
+                       CSS_GRID_DOWN  = $00AA4E
+                       CSS_GRID_UP    = $00AA4D
                        UNREACH_00AA9D = $00AA9D             ;      |        |      ;  
                        UNREACH_00AA9E = $00AA9E             ;      |        |      ;  
                        UNREACH_00AAD9 = $00AAD9             ;      |        |      ;  
