@@ -8113,7 +8113,7 @@
                        JSR.W CODE_C0A843                    ;C0A53D|2043A8  |C0A843;  
                                                             ;      |        |      ;  
           CODE_C0A540: JSR.W CODE_C0A6F5                    ;C0A540|20F5A6  |C0A6F5;  
-                       JSR.W CHECK_IF_START_PRESSED                    ;C0A543|2063A5  |C0A563;  
+                       JSR.W CHECK_IF_START_PRESSED         ;C0A543|2063A5  |C0A563;
                        JSR.W CODE_C0ADF3                    ;C0A546|20F3AD  |C0ADF3;  
                        SEP #$20                             ;C0A549|E220    |      ;  
                        LDA.W $1B10                          ;C0A54B|AD101B  |001B10;  
@@ -8130,15 +8130,15 @@
                        RTS                                  ;C0A562|60      |      ;  
                                                             ;      |        |      ;  
                                                             ;      |        |      ;  
-          CHECK_IF_START_PRESSED: REP #$30                             ;C0A563|C230    |      ;  
+          CHECK_IF_START_PRESSED: REP #$30                  ;C0A563|C230    |      ;
                        LDA.B $60                            ;C0A565|A560    |000060;  
                        ORA.B $62                            ;C0A567|0562    |000062;  
                        AND.W #$2000                         ;C0A569|290020  |      ;  Store #$00FF in $1B12 if Start is pressed.
-                       BEQ CODE_C0A574                      ;C0A56C|F006    |C0A574;  Then Return.
+                       BEQ CHECK_IF_START_PRESSED_RETURN    ;C0A56C|F006    |C0A574;  Then Return.
                        LDA.W #$00FF                         ;C0A56E|A9FF00  |      ;
                        STA.W $1B12                          ;C0A571|8D121B  |001B12;  
                                                             ;      |        |      ;  
-          CODE_C0A574: RTS                                  ;C0A574|60      |      ;  
+   CHECK_IF_START_PRESSED_RETURN: RTS
                                                             ;      |        |      ;  
                                                             ;      |        |      ;  
           CODE_C0A575: JSR.W CODE_C0AE89                    ;C0A575|2089AE  |C0AE89;  
@@ -8427,22 +8427,22 @@
                        db $20,$30,$A6,$60                   ;C0A8F6|        |C0A630;  
                                                             ;      |        |      ;  
           CODE_C0A8FA: REP #$30                             ;C0A8FA|C230    |      ;  
-                       STA.B $FE                            ;C0A8FC|85FE    |0000FE;  
-                       LDY.W #$1B40                         ;C0A8FE|A0401B  |      ;  
-                       LDA.W $0002,Y                        ;C0A901|B90200  |000002;  
-                       BNE CODE_C0A90C                      ;C0A904|D006    |C0A90C;  
-                       JSR.W CSS_UPDATE_CHAR                    ;C0A906|208EA5  |C0A58E;
+                       STA.B $FE                            ;C0A8FC|85FE    |0000FE;  Presumably stores $60, the controller, before calling CSS_UPDATE_CHAR
+                       LDY.W #$1B40                         ;C0A8FE|A0401B  |      ;  Player 1 character
+                       LDA.W $0002,Y                        ;C0A901|B90200  |000002;  check $1B42, if it is 0, update p1 then CODE_C0A630
+                       BNE CODE_C0A90C                      ;C0A904|D006    |C0A90C;  else return
+                       JSR.W CSS_UPDATE_CHAR                ;C0A906|208EA5  |C0A58E;
                        JSR.W CODE_C0A630                    ;C0A909|2030A6  |C0A630;  
                                                             ;      |        |      ;  
           CODE_C0A90C: RTS                                  ;C0A90C|60      |      ;  
                                                             ;      |        |      ;  
                                                             ;      |        |      ;  
-          CODE_C0A90D: REP #$30                             ;C0A90D|C230    |      ;  
-                       STA.B $FE                            ;C0A90F|85FE    |0000FE;  
+          CODE_C0A90D: REP #$30                             ;C0A90D|C230    |      ; Not called in vs CPU, this is for P2
+                       STA.B $FE                            ;C0A90F|85FE    |0000FE; store 6
                        LDY.W #$1B80                         ;C0A911|A0801B  |      ;  
-                       LDA.W $0002,Y                        ;C0A914|B90200  |000002;  
-                       BNE CODE_C0A91F                      ;C0A917|D006    |C0A91F;  
-                       JSR.W CSS_UPDATE_CHAR                    ;C0A919|208EA5  |C0A58E;
+                       LDA.W $0002,Y                        ;C0A914|B90200  |000002; Check $1B82, if it is 0, update P2 then CODE_C0A630
+                       BNE CODE_C0A91F                      ;C0A917|D006    |C0A91F; Otherwise return
+                       JSR.W CSS_UPDATE_CHAR                ;C0A919|208EA5  |C0A58E;
                        JSR.W CODE_C0A630                    ;C0A91C|2030A6  |C0A630;  
                                                             ;      |        |      ;  
           CODE_C0A91F: RTS                                  ;C0A91F|60      |      ;  
