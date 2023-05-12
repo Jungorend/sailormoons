@@ -36,11 +36,11 @@
                        CSS_GRID_LEFT  = $00AA4F
                        CSS_GRID_DOWN  = $00AA4E
                        CSS_GRID_UP    = $00AA4D
-                       UNREACH_00AA9D = $00AA9D             ;      |        |      ;  
-                       UNREACH_00AA9E = $00AA9E             ;      |        |      ;  
+                       P1_CURSOR_POS_X = $00AA9D             ;      |        |      ;
+                       P1_CURSOR_POS_Y = $00AA9E             ;      |        |      ;
                        UNREACH_00AAD9 = $00AAD9             ;      |        |      ;  
-                       UNREACH_00AAB1 = $00AAB1             ;      |        |      ;  
-                       UNREACH_00AAB2 = $00AAB2             ;      |        |      ;  
+                       P2_CURSOR_POS_X = $00AAB1             ;      |        |      ;
+                       P2_CURSOR_POS_Y = $00AAB2             ;      |        |      ;
                        UNREACH_00AAE7 = $00AAE7             ;      |        |      ;  
                        UNREACH_00AAEE = $00AAEE             ;      |        |      ;  
                        UNREACH_00AD9B = $00AD9B             ;      |        |      ;  

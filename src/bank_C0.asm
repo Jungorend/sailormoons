@@ -4573,7 +4573,7 @@
                        STA.B $66                            ;C0835B|8566    |000066;  
                        SEP #$20                             ;C0835D|E220    |      ;  
                        LDA.W $4218                          ;C0835F|AD1842  |804218;  
-                       STA.B $5C                            ;C08362|855C    |00005C;  
+                       STA.B $5C                            ;C08362|855C    |00005C;  Stores input in $5C/$5D and $5E/$5F
                        LDA.W $4219                          ;C08364|AD1942  |804219;  Stores new button presses in $60/$61 and $62/$63 for P1 and P2
                        STA.B $5D                            ;C08367|855D    |00005D;  
                        LDA.W $421A                          ;C08369|AD1A42  |80421A;  
@@ -8261,7 +8261,7 @@
                        TAX                                  ;C0A708|AA      |      ;  
                        JSR.W (UNREACH_C0A73F,X)             ;C0A709|FC3FA7  |C0A73F; X is a pointer. Multiplied by 2 as we're reading
                        REP #$30                             ;C0A70C|C230    |      ; two bytes here. Seems to point to C0A77D by default
-                       LDX.B $98                            ;C0A70E|A698    |000098;  
+                       LDX.B $98                            ;C0A70E|A698    |000098; unclear it'd ever not
                        CPX.W #$0200                         ;C0A710|E00002  |      ;  
                        BCS CODE_C0A73E                      ;C0A713|B029    |C0A73E;  
                        SEP #$30                             ;C0A715|E230    |      ;  
@@ -8303,10 +8303,10 @@
 
     ;; Called from C0A6F5
                        SEP #$30                             ;C0A77D|E230    |      ; Y is player one * 2 (for word indexing)
-                       LDA.W UNREACH_00AA9D,Y               ;C0A77F|B99DAA  |00AA9D; put the loaded value based on character in $1
+                       LDA.W P1_CURSOR_POS_X,Y               ;C0A77F|B99DAA  |00AA9D; put the loaded value based on character in $1
                        STA.B $01                            ;C0A782|8501    |000001;  
                        STZ.B $02                            ;C0A784|6402    |000002; 0 into $2
-                       LDA.W UNREACH_00AA9E,Y               ;C0A786|B99EAA  |00AA9E; second byte of the index above into $3
+                       LDA.W P1_CURSOR_POS_Y,Y               ;C0A786|B99EAA  |00AA9E; second byte of the index above into $3
                        STA.B $03                            ;C0A789|8503    |000003; 0 into $4, $6
                        STZ.B $04                            ;C0A78B|6404    |000004; seems these are the cursor coordinates
                        STZ.B $06                            ;C0A78D|6406    |000006;  
@@ -8330,12 +8330,15 @@
                        db $B9,$C6,$AA,$85,$03,$64,$04,$64   ;C0A7D4|        |00AAC6;  
                        db $06,$A9,$30,$85,$07,$AD,$D9,$AA   ;C0A7DC|        |0000A9;  
                        db $85,$00,$A9,$DA,$85,$12,$A9,$AA   ;C0A7E4|        |000000;  
-                       db $85,$13,$20,$17,$9B,$60           ;C0A7EC|        |000013;  
+                       db $85,$13,$20,$17,$9B,$60           ;C0A7EC|        |000013;
+
+    ;; Looks to be identical to the code above,
+    ;; but for P2 rather than P1
                        SEP #$30                             ;C0A7F2|E230    |      ;  
-                       LDA.W UNREACH_00AAB1,Y               ;C0A7F4|B9B1AA  |00AAB1;  
+                       LDA.W P2_CURSOR_POS_X,Y               ;C0A7F4|B9B1AA  |00AAB1;
                        STA.B $01                            ;C0A7F7|8501    |000001;  
                        STZ.B $02                            ;C0A7F9|6402    |000002;  
-                       LDA.W UNREACH_00AAB2,Y               ;C0A7FB|B9B2AA  |00AAB2;  
+                       LDA.W P2_CURSOR_POS_Y,Y               ;C0A7FB|B9B2AA  |00AAB2;
                        STA.B $03                            ;C0A7FE|8503    |000003;  
                        STZ.B $04                            ;C0A800|6404    |000004;  
                        STZ.B $06                            ;C0A802|6406    |000006;  
@@ -8351,10 +8354,10 @@
                        RTS                                  ;C0A818|60      |      ;  
                                                             ;      |        |      ;  
                        SEP #$30                             ;C0A819|E230    |      ;  
-                       LDA.W UNREACH_00AAB1,Y               ;C0A81B|B9B1AA  |00AAB1;  
+                       LDA.W P2_CURSOR_POS_X,Y               ;C0A81B|B9B1AA  |00AAB1;
                        STA.B $01                            ;C0A81E|8501    |000001;  
                        STZ.B $02                            ;C0A820|6402    |000002;  
-                       LDA.W UNREACH_00AAB2,Y               ;C0A822|B9B2AA  |00AAB2;  
+                       LDA.W P2_CURSOR_POS_Y,Y               ;C0A822|B9B2AA  |00AAB2;
                        STA.B $03                            ;C0A825|8503    |000003;  
                        STZ.B $04                            ;C0A827|6404    |000004;  
                        STZ.B $06                            ;C0A829|6406    |000006;  
@@ -8596,10 +8599,10 @@
                        db $03,$04,$05,$06,$FF,$01,$02,$FF   ;C0AA45|        |000004;  
                                                             ;      |        |      ;
 
-                       db $00,$00,$00,$00                   ;C0AA4D|     ;
 
     ;; Character Selection Grid
     ;; Values are Up, Down, Left, Right
+                       db $00,$00,$00,$00   ; C0AA4D ;
                        db $07,$09,$03,$02   ; Moon
                        db $06,$02,$01,$05   ; Mercury
                        db $08,$03,$04,$01   ; Mars
@@ -8616,9 +8619,10 @@
                        db $04,$04,$04,$03,$05,$05,$02,$05   ;C0AA85|        |000004;  
                        db $06,$02,$08,$06,$07,$03,$07,$08   ;C0AA8D|        |000002;  
                        db $08,$01,$07,$06,$01,$09,$09,$09   ;C0AA95|        |      ;  
-                       db $00,$00
 
     ;; P1 Cursor Positions
+    ;; First value is the X, second is the Y
+                       db $00,$00 ; P1_CURSOR_POS_X, P1_CURSOR_POS_Y ; C00AA9D
                        db $73,$6F ; Moon
                        db $9D,$71 ; Mercury
                        db $47,$6E ; Mars
@@ -8629,13 +8633,20 @@
                        db $44,$39 ; Pluto
                        db $72,$A2 ; Chibi
 
+    ;; P2 Cursor Positions
+    ;; First value is X, second is Y
+                       db $00,$00 ; P2_CURSOR_POS_X, P2_CURSOR_POS_Y ; C0AAB1
+                       db $83,$6F ; Moon
+                       db $AD,$71 ; Mercury
+                       db $57,$6E ; Mars
+                       db $34,$75 ; Jupiter
+                       db $CD,$80 ; Venus
+                       db $AE,$3B ; Uranus
+                       db $83,$35 ; Neptune
+                       db $54,$39 ; Pluto
+                       db $82,$A2 ; Chibi
 
-                       db $00,$00                  ;C0AAA1|
-
-                       db $83,$6F                  ;C0AAA1|        |      ;
-                       db $AD,$71,$57,$6E,$34,$75,$CD,$80   ;C0AAB5|        |005771;  
-                       db $AE,$3B,$83,$35,$54,$39,$82,$A2   ;C0AABD|        |00833B;  
-                       db $00,$00,$7B,$6F,$A5,$71,$4F,$6E   ;C0AAC5|        |      ;  
+                       db $00,$00,$7B,$6F,$A5,$71,$4F,$6E   ;C0AAC5|        |      ;
                        db $2C,$75,$C5,$80,$A6,$3B,$7B,$35   ;C0AACD|        |00C575;  
                        db $4C,$39,$7A,$A2,$01,$00,$F0,$00   ;C0AAD5|        |C07A39;  
                        db $08,$00,$48,$01,$00,$F0,$00,$08   ;C0AADD|        |      ;  

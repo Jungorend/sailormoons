@@ -4,6 +4,10 @@
 ** Notable Bytes
 - $1B40: Player One selected character
 - $1B80: Player Two selected character
+- $5C-$5D: Current frame input player one
+- $5E-$5F: Current frame input player two
+- $60-$61: New button presses player one
+- $62-$63: New button presses player two
 
 ** Character Codes
 | Character | Value |
