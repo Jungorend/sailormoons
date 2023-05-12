@@ -7866,7 +7866,7 @@
                        db $05,$05,$04,$00,$00,$03,$05,$01   ;C0A2A8|        |000005;  
                        db $01,$04,$03,$02,$02               ;C0A2B0|        |000004;  
                                                             ;      |        |      ;  
-          CODE_C0A2B5: JSR.W CODE_C0B141                    ;C0A2B5|2041B1  |C0B141;  
+          CODE_C0A2B5: JSR.W ZERO_OUT_400                   ;C0A2B5|2041B1  |C0B141;
                        SEP #$30                             ;C0A2B8|E230    |      ;  
                        STZ.B $98                            ;C0A2BA|6498    |000098;  
                        JSR.W CODE_C0A3A2                    ;C0A2BC|20A2A3  |C0A3A2;  
@@ -8248,19 +8248,19 @@
                        db $99,$04,$00,$A9,$02,$00,$8D,$14   ;C0A6E5|        |000004;  
                        db $1B,$B9,$00,$00,$8D,$16,$1B,$60   ;C0A6ED|        |      ;  
                                                             ;      |        |      ;  
-          CODE_C0A6F5: REP #$30                             ;C0A6F5|C230    |      ;  
-                       STZ.B $98                            ;C0A6F7|6498    |000098;  
-                       JSR.W CODE_C0B141                    ;C0A6F9|2041B1  |C0B141;  
+          CODE_C0A6F5: REP #$30                             ;C0A6F5|C230    |      ;  !
+                       STZ.B $98                            ;C0A6F7|6498    |000098;  Zero out $98 byte
+                       JSR.W ZERO_OUT_400                   ;C0A6F9|2041B1  |C0B141;
                        SEP #$30                             ;C0A6FC|E230    |      ;  
-                       LDA.W $1B40                          ;C0A6FE|AD401B  |001B40;  
-                       ASL A                                ;C0A701|0A      |      ;  
-                       TAY                                  ;C0A702|A8      |      ;  
+                       LDA.W $1B40                          ;C0A6FE|AD401B  |001B40; Read player one character
+                       ASL A                                ;C0A701|0A      |      ; multiply by 2.
+                       TAY                                  ;C0A702|A8      |      ; store in Y
                        LDA.B $8D                            ;C0A703|A58D    |00008D;  
-                       AND.B #$FF                           ;C0A705|29FF    |      ;  
-                       ASL A                                ;C0A707|0A      |      ;  
+                       AND.B #$FF                           ;C0A705|29FF    |      ; load first byte of $8D
+                       ASL A                                ;C0A707|0A      |      ; multiply by 2 and store in X
                        TAX                                  ;C0A708|AA      |      ;  
-                       JSR.W (UNREACH_C0A73F,X)             ;C0A709|FC3FA7  |C0A73F;  
-                       REP #$30                             ;C0A70C|C230    |      ;  
+                       JSR.W (UNREACH_C0A73F,X)             ;C0A709|FC3FA7  |C0A73F; X is a pointer. Multiplied by 2 as we're reading
+                       REP #$30                             ;C0A70C|C230    |      ; two bytes here. Seems to point to C0A77D by default
                        LDX.B $98                            ;C0A70E|A698    |000098;  
                        CPX.W #$0200                         ;C0A710|E00002  |      ;  
                        BCS CODE_C0A73E                      ;C0A713|B029    |C0A73E;  
@@ -8299,14 +8299,16 @@
                        db $A0,$00,$06,$A9,$1F,$00,$8B,$54   ;C0A763|        |      ;  
                        db $00,$80,$AB,$A2,$D9,$AA,$A0,$20   ;C0A76B|        |      ;  
                        db $06,$A9,$1F,$00,$8B,$54,$00,$80   ;C0A773|        |0000A9;  
-                       db $AB,$60                           ;C0A77B|        |      ;  
-                       SEP #$30                             ;C0A77D|E230    |      ;  
-                       LDA.W UNREACH_00AA9D,Y               ;C0A77F|B99DAA  |00AA9D;  
+                       db $AB,$60                           ;C0A77B|        |      ;
+
+    ;; Called from C0A6F5
+                       SEP #$30                             ;C0A77D|E230    |      ; Y is player one * 2 (for word indexing)
+                       LDA.W UNREACH_00AA9D,Y               ;C0A77F|B99DAA  |00AA9D; put the loaded value based on character in $1
                        STA.B $01                            ;C0A782|8501    |000001;  
-                       STZ.B $02                            ;C0A784|6402    |000002;  
-                       LDA.W UNREACH_00AA9E,Y               ;C0A786|B99EAA  |00AA9E;  
-                       STA.B $03                            ;C0A789|8503    |000003;  
-                       STZ.B $04                            ;C0A78B|6404    |000004;  
+                       STZ.B $02                            ;C0A784|6402    |000002; 0 into $2
+                       LDA.W UNREACH_00AA9E,Y               ;C0A786|B99EAA  |00AA9E; second byte of the index above into $3
+                       STA.B $03                            ;C0A789|8503    |000003; 0 into $4, $6
+                       STZ.B $04                            ;C0A78B|6404    |000004; seems these are the cursor coordinates
                        STZ.B $06                            ;C0A78D|6406    |000006;  
                        LDA.B #$30                           ;C0A78F|A930    |      ;  
                        STA.B $07                            ;C0A791|8507    |000007;  
@@ -8614,10 +8616,23 @@
                        db $04,$04,$04,$03,$05,$05,$02,$05   ;C0AA85|        |000004;  
                        db $06,$02,$08,$06,$07,$03,$07,$08   ;C0AA8D|        |000002;  
                        db $08,$01,$07,$06,$01,$09,$09,$09   ;C0AA95|        |      ;  
-                                                            ;      |        |      ;  
-                       db $00,$00,$73,$6F,$9D,$71,$47,$6E   ;C0AA9D|        |      ;  
-                       db $24,$75,$BD,$80,$9E,$3B,$73,$35   ;C0AAA5|        |000075;  
-                       db $44,$39,$72,$A2,$00,$00,$83,$6F   ;C0AAAD|        |      ;  
+                       db $00,$00
+
+    ;; P1 Cursor Positions
+                       db $73,$6F ; Moon
+                       db $9D,$71 ; Mercury
+                       db $47,$6E ; Mars
+                       db $24,$75 ; Jupiter
+                       db $BD,$80 ; Venus
+                       db $9E,$3B ; Uranus
+                       db $73,$35 ; Neptune
+                       db $44,$39 ; Pluto
+                       db $72,$A2 ; Chibi
+
+
+                       db $00,$00                  ;C0AAA1|
+
+                       db $83,$6F                  ;C0AAA1|        |      ;
                        db $AD,$71,$57,$6E,$34,$75,$CD,$80   ;C0AAB5|        |005771;  
                        db $AE,$3B,$83,$35,$54,$39,$82,$A2   ;C0AABD|        |00833B;  
                        db $00,$00,$7B,$6F,$A5,$71,$4F,$6E   ;C0AAC5|        |      ;  
@@ -8951,19 +8966,21 @@
                        MVN $00,$00                          ;C0B13C|540000  |      ;  
                        PLB                                  ;C0B13F|AB      |      ;  
                        RTS                                  ;C0B140|60      |      ;  
-                                                            ;      |        |      ;  
-                                                            ;      |        |      ;  
-          CODE_C0B141: REP #$30                             ;C0B141|C230    |      ;  
-                       PHB                                  ;C0B143|8B      |      ;  
-                       STZ.W $0400                          ;C0B144|9C0004  |000400;  
-                       LDX.W #$0400                         ;C0B147|A20004  |      ;  
-                       LDY.W #$0401                         ;C0B14A|A00104  |      ;  
-                       LDA.W #$001E                         ;C0B14D|A91E00  |      ;  
-                       MVN $00,$00                          ;C0B150|540000  |      ;  
-                       PLB                                  ;C0B153|AB      |      ;  
-                       RTS                                  ;C0B154|60      |      ;  
-                                                            ;      |        |      ;  
-                                                            ;      |        |      ;  
+
+
+    ;; Zeroes out $400 to 41F
+    ;; Roughly 32 bytes
+          ZERO_OUT_400: REP #$30
+                       PHB
+                       STZ.W $0400
+                       LDX.W #$0400
+                       LDY.W #$0401
+                       LDA.W #$001E
+                       MVN $00,$00
+                       PLB
+                       RTS
+
+                                   
           CODE_C0B155: REP #$30                             ;C0B155|C230    |      ;  
                        LDA.W $1B10                          ;C0B157|AD101B  |001B10;  
                        AND.W #$00FF                         ;C0B15A|29FF00  |      ;  
