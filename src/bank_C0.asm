@@ -6552,10 +6552,10 @@
                        db $30,$A2,$00,$0C,$A0,$00,$05,$A9   ;C09623|        |C095C7;  
                        db $FF,$01,$8B,$54,$00,$00,$AB,$60   ;C0962B|        |548B01;  
                                                             ;      |        |      ;  
-          CODE_C09633: REP #$30                             ;C09633|C230    |      ;  
-                       LDA.B $A3                            ;C09635|A5A3    |0000A3;  
+          CODE_C09633: REP #$30                             ;C09633|C230    |      ;  ! This is in the battle part of the game
+                       LDA.B $A3                            ;C09635|A5A3    |0000A3;  $A3 seems to be p1 input
                        STA.B $AB                            ;C09637|85AB    |0000AB;  
-                       LDA.B $A5                            ;C09639|A5A5    |0000A5;  
+                       LDA.B $A5                            ;C09639|A5A5    |0000A5;  $A5 seems to be p2 input
                        STA.B $AD                            ;C0963B|85AD    |0000AD;  
                        LDA.B $5C                            ;C0963D|A55C    |00005C;  
                        TAX                                  ;C0963F|AA      |      ;  
@@ -6630,10 +6630,12 @@
                                                             ;      |        |      ;  
           CODE_C096DC: TXA                                  ;C096DC|8A      |      ;  
                        BIT.W #$0010                         ;C096DD|891000  |      ;  
-                       BEQ CODE_C096E9                      ;C096E0|F007    |C096E9;  
+                       BEQ BATTLE_NEW_INPUTS                      ;C096E0|F007    |C096E9;
                        db $A5,$A5,$0D,$36,$1E,$85,$A5       ;C096E2|        |0000A5;  
-                                                            ;      |        |      ;  
-          CODE_C096E9: LDA.B $A3                            ;C096E9|A5A3    |0000A3;  
+                                                            ;      |        |      ;
+
+    ;; This function seems to store the newly pressed inputs for player 1 and player 2 in $A7 and $A9 respectively.
+          BATTLE_NEW_INPUTS: LDA.B $A3                            ;C096E9|A5A3    |0000A3;
                        EOR.B $AB                            ;C096EB|45AB    |0000AB;  
                        AND.B $A3                            ;C096ED|25A3    |0000A3;  
                        STA.B $A7                            ;C096EF|85A7    |0000A7;  
@@ -6641,8 +6643,9 @@
                        EOR.B $AD                            ;C096F3|45AD    |0000AD;  
                        AND.B $A5                            ;C096F5|25A5    |0000A5;  
                        STA.B $A9                            ;C096F7|85A9    |0000A9;  
-                       RTS                                  ;C096F9|60      |      ;  
-                                                            ;      |        |      ;  
+                       RTS                                  ;C096F9|60      |      ;
+
+
                        db $8B,$4B,$AB,$C2,$30,$A9,$00,$40   ;C096FA|        |      ;  
                        db $8D,$20,$1E,$8D,$2C,$1E,$A9,$40   ;C09702|        |001E20;  
                        db $00,$8D,$22,$1E,$8D,$2E,$1E,$A9   ;C0970A|        |      ;  
@@ -8334,6 +8337,7 @@
 
     ;; Looks to be identical to the code above,
     ;; but for P2 rather than P1
+    ;; Expects Y to be character * indexing (2)
                        SEP #$30                             ;C0A7F2|E230    |      ;  
                        LDA.W P2_CURSOR_POS_X,Y               ;C0A7F4|B9B1AA  |00AAB1;
                        STA.B $01                            ;C0A7F7|8501    |000001;  
@@ -13429,19 +13433,19 @@
                        db $00,$7F,$A5,$A5,$9F,$00,$1C,$7F   ;C0EA31|        |      ;  
                        db $E6,$AF,$E6,$AF,$60,$60           ;C0EA39|        |0000AF;  
                                                             ;      |        |      ;  
-          CODE_C0EA3F: REP #$30                             ;C0EA3F|C230    |      ;  
+          CODE_C0EA3F: REP #$30                             ;C0EA3F|C230    |      ; !
                        LDA.B $60                            ;C0EA41|A560    |000060;  
                        ORA.B $62                            ;C0EA43|0562    |000062;  
-                       AND.W #$1000                         ;C0EA45|290010  |      ;  
-                       BNE CODE_C0EA82                      ;C0EA48|D038    |C0EA82;  
+                       AND.W #$1000                         ;C0EA45|290010  |      ; Check if either player pressed Start
+                       BNE CODE_C0EA82                      ;C0EA48|D038    |C0EA82; If not, got to C0EA82
                        LDX.B $AF                            ;C0EA4A|A6AF    |0000AF;  
                        CPX.W #$1C00                         ;C0EA4C|E0001C  |      ;  
                        BEQ UNREACH_C0EA96                   ;C0EA4F|F045    |C0EA96;  
-                       LDA.W $1E3D                          ;C0EA51|AD3D1E  |001E3D;  
-                       AND.W #$00FF                         ;C0EA54|29FF00  |      ;  
+                       LDA.W $1E3D                          ;C0EA51|AD3D1E  |001E3D; Unclear what these are checking yet, but
+                       AND.W #$00FF                         ;C0EA54|29FF00  |      ; in testing they never were reached so skipping
                        BNE UNREACH_C0EAAA                   ;C0EA57|D051    |C0EAAA;  
-                       LDA.B $A3                            ;C0EA59|A5A3    |0000A3;  
-                       STA.B $AB                            ;C0EA5B|85AB    |0000AB;  
+                       LDA.B $A3                            ;C0EA59|A5A3    |0000A3; On Battle functions, $A3 refers to p1 input, $A5 p2 input
+                       STA.B $AB                            ;C0EA5B|85AB    |0000AB;
                        LDA.B $A5                            ;C0EA5D|A5A5    |0000A5;  
                        STA.B $AD                            ;C0EA5F|85AD    |0000AD;  
                        LDA.L $7F0000,X                      ;C0EA61|BF00007F|7F0000;  
@@ -13460,7 +13464,9 @@
                        STA.B $A9                            ;C0EA7F|85A9    |0000A9;  
                        RTS                                  ;C0EA81|60      |      ;  
                                                             ;      |        |      ;  
-                                                            ;      |        |      ;  
+                                                            ;      |        |      ;
+
+    ;; This function appears to clear the input history and then set $1E05 to the value in $FF
           CODE_C0EA82: STZ.B $A3                            ;C0EA82|64A3    |0000A3;  
                        STZ.B $AB                            ;C0EA84|64AB    |0000AB;  
                        STZ.B $A7                            ;C0EA86|64A7    |0000A7;  
