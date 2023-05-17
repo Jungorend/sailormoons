@@ -8172,41 +8172,41 @@
                        TAX
                        LDA.B [$FE]   ; FE is set to the address of either $60 or $62, the controller input for player 1 or player 2
                        BIT.W #$0800  ; These next lines check if left, down, up were pressed, or if right wasn't pressed.
-                       BNE CSS_MOVE_UP
+                       BNE .MOVE_UP
                        BIT.W #$0400
-                       BNE CSS_MOVE_DOWN
+                       BNE .MOVE_DOWN
                        BIT.W #$0200
-                       BNE CSS_MOVE_LEFT
+                       BNE .MOVE_LEFT
                        BIT.W #$0100
-                       BEQ CSS_UPDATE_CHAR_RETURN
+                       BEQ .RETURN
                        LDA.W CSS_GRID_RIGHT,X ;  If no directions pressed, return.
                        AND.W #$00FF           ;  Otherwise, sets the character character code in the address Y points to
                        STA.W $0000,Y          ; based on the character selection grid.
-                       BRA CSS_UPDATE_CHAR_PUSH_CHANGES     ; If Up:    AA4D + X
-                                                            ;    Down:  AA4E + X
-                                                            ;    Left:  AA4F + X
-          CSS_MOVE_LEFT: LDA.W CSS_GRID_LEFT,X              ;    Right: AA50 + X
+                       BRA .PUSH_CHANGES                      ; If Up:    AA4D + X
+                                                              ;    Down:  AA4E + X
+                                                              ;    Left:  AA4F + X
+          .MOVE_LEFT: LDA.W CSS_GRID_LEFT,X                   ;    Right: AA50 + X
                        AND.W #$00FF
-                       STA.W $0000,Y                        ; Take only the lower byte and put it back in [$Y]
-                       BRA CSS_UPDATE_CHAR_PUSH_CHANGES     ; Then set [$78] = $4
+                       STA.W $0000,Y         ; Take only the lower byte and put it back in $Y
+                       BRA .PUSH_CHANGES     ; Then set $78 = $4
 
                                                       
-          CSS_MOVE_DOWN: LDA.W CSS_GRID_DOWN,X
+          .MOVE_DOWN: LDA.W CSS_GRID_DOWN,X
                        AND.W #$00FF
                        STA.W $0000,Y
-                       BRA CSS_UPDATE_CHAR_PUSH_CHANGES
+                       BRA .PUSH_CHANGES
 
                                                 
-          CSS_MOVE_UP: LDA.W CSS_GRID_UP,X
+          .MOVE_UP: LDA.W CSS_GRID_UP,X
                        AND.W #$00FF
                        STA.W $0000,Y
 
-          CSS_UPDATE_CHAR_PUSH_CHANGES: SEP #$20
+          .PUSH_CHANGES: SEP #$20
                        LDA.B #$04
                        STA.B $78
                        REP #$20
 
-          CSS_UPDATE_CHAR_RETURN: RTS
+          .RETURN: RTS
 
 
 
@@ -8607,15 +8607,15 @@
     ;; Character Selection Grid
     ;; Values are Up, Down, Left, Right
                        db $00,$00,$00,$00   ; C0AA4D ;
-                       db $07,$09,$03,$02   ; Moon
-                       db $06,$02,$01,$05   ; Mercury
-                       db $08,$03,$04,$01   ; Mars
-                       db $04,$04,$04,$03   ; Jupiter
-                       db $05,$05,$02,$05   ; Venus
-                       db $06,$02,$07,$06   ; Uranus
-                       db $07,$01,$08,$06   ; Neptune
-                       db $08,$03,$08,$07   ; Pluto
-                       db $01,$09,$09,$09   ; Chibi
+                       db !Neptune, !Chibi,   !Mars,    !Mercury    ; Moon
+                       db !Uranus,  !Mercury, !Moon,    !Venus      ; Mercury
+                       db !Pluto,   !Mars,    !Jupiter, !Moon       ; Mars
+                       db !Jupiter, !Jupiter, !Jupiter, !Mars       ; Jupiter
+                       db !Venus,   !Venus,   !Mercury, !Venus      ; Venus
+                       db !Uranus,  !Mercury, !Neptune, !Uranus     ; Uranus
+                       db !Neptune, !Moon,    !Pluto,   !Uranus     ; Neptune
+                       db !Pluto,   !Mars,    !Pluto,   !Neptune    ; Pluto
+                       db !Moon,    !Chibi,   !Chibi,   !Chibi      ; Chibi
 
 
                        db $00,$00,$00,$00,$01,$09,$03,$02   ;C0AA75|        |      ;  

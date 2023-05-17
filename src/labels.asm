@@ -1,3 +1,13 @@
+    !Moon = $01
+    !Mercury = $02
+    !Mars = $03
+    !Jupiter = $04
+    !Venus = $05
+    !Uranus = $06
+    !Neptune = $07
+    !Pluto = $08
+    !Chibi = $09
+
                        UNREACH_80932D = $80932D             ;      |        |      ;  
                        CODE_808ADD = $808ADD                ;      |        |      ;  
                        CODE_80EB4B = $80EB4B                ;      |        |      ;  
