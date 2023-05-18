@@ -31,3 +31,12 @@
   Roughly C0AA51 - C0AA74
   4 byte chunks for each character. The chunks are:
   Up Down Left Right.
+
+* Battle
+** Notable Bytes
+- 000a00 this seems to be one of several mirrored bytes that stores p1's position relative to the left side of the screen. $0 to $80
+- $0803/$0804 contain the timer. It is in decimal, second then first
+- $1001 seems to be p1 animation, changes based on frame but only when doing something goes up to 1300
+  $0b00 looks worth looking into too
+- $1d00 is p1 character, $1d03 is p2 character
+  $1d02 is p1 character color

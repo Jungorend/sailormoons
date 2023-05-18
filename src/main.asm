@@ -1,4 +1,13 @@
-                       hirom                                ;      |        |      ;  
+                       hirom                                ;      |        |      ;
+    !Moon = $01
+    !Mercury = $02
+    !Mars = $03
+    !Jupiter = $04
+    !Venus = $05
+    !Uranus = $06
+    !Neptune = $07
+    !Pluto = $08
+    !Chibi = $09
                                                             ;      |        |      ;  
                        incsrc "bank_C0.asm"                 ;      |        |      ;  
                        incsrc "bank_C1.asm"                 ;      |        |      ;  
