@@ -13494,19 +13494,27 @@
                 RTS
 
     ;; Clears out player input history, stores $71 in $1E04, calls external function (unchecked)
+    ;; continues to next segment if C flag set on return
             UNREACH_C0EAAA: SEP $30
                 LDA.B #$01
                 STA.B $71
                 STA.W $1E04
                 JSL.L CODE_8083D0
-                BCC $01
+                BCC UNREACH_C0EABA
                 RTS
 
-
     ;; This looks like code too, starting with a SEP 30 and all.
-                       db $E2,$30,$AD,$01,$10,$F0,$09,$C9   ;C0EABA|        |      ;  
-                       db $21,$F0,$05,$C9,$1F,$F0,$01,$60   ;C0EAC2|        |0000F0;  
-                       db $AD,$81,$10,$F0,$09,$C9,$21,$F0   ;C0EACA|        |001081;  
+            UNREACH_C0EABA:  SEP $30
+                LDA.W $1001
+                BEQ UNREACH_C0EACA ; Return unless $1001 is 0, $21, or $1F
+                CMP #$21
+                BEQ UNREACH_C0EACA
+                CMP #$1F
+                BEQ UNREACH_C0EACA
+                RTS
+
+UNREACH_C0EACA:
+                       db $AD,$81,$10,$F0,$09,$C9,$21,$F0   ;C0EACA|        |001081;
                        db $05,$C9,$1F,$F0,$01,$60,$AD,$49   ;C0EAD2|        |0000C9;  
                        db $10,$CD,$00,$08,$D0,$1B,$AD,$C9   ;C0EADA|        |C0EAA9;  
                        db $10,$CD,$01,$08,$D0,$13,$A9,$01   ;C0EAE2|        |C0EAB1;  
