@@ -6552,7 +6552,7 @@
                        db $30,$A2,$00,$0C,$A0,$00,$05,$A9   ;C09623|        |C095C7;  
                        db $FF,$01,$8B,$54,$00,$00,$AB,$60   ;C0962B|        |548B01;  
                                                             ;      |        |      ;  
-          CODE_C09633: REP #$30                             ;C09633|C230    |      ;  ! This is in the battle part of the game
+          CODE_C09633: REP #$30                             ;C09633|C230    |      ;  @ This is in the battle part of the game
                        LDA.B $A3                            ;C09635|A5A3    |0000A3;  $A3 seems to be p1 input
                        STA.B $AB                            ;C09637|85AB    |0000AB;  
                        LDA.B $A5                            ;C09639|A5A5    |0000A5;  $A5 seems to be p2 input
@@ -8251,7 +8251,7 @@
                        db $99,$04,$00,$A9,$02,$00,$8D,$14   ;C0A6E5|        |000004;  
                        db $1B,$B9,$00,$00,$8D,$16,$1B,$60   ;C0A6ED|        |      ;  
                                                             ;      |        |      ;  
-          CODE_C0A6F5: REP #$30                             ;C0A6F5|C230    |      ;  !
+          CODE_C0A6F5: REP #$30                             ;C0A6F5|C230    |      ;  @
                        STZ.B $98                            ;C0A6F7|6498    |000098;  Zero out $98 byte
                        JSR.W ZERO_OUT_400                   ;C0A6F9|2041B1  |C0B141;
                        SEP #$30                             ;C0A6FC|E230    |      ;  
@@ -12351,7 +12351,7 @@
                        LDA.B #$01                           ;C0DB3C|A901    |      ;  
                        STA.B $71                            ;C0DB3E|8571    |000071;  
                        STA.W $1E04                          ;C0DB40|8D041E  |001E04;  
-                       JSL.L CODE_8083D0                    ;C0DB43|22D08380|8083D0;  
+                       JSL.L CODE_8083D0                    ;C0DB43|22D08380|8083D0;
                        BCC CODE_C0DB4C                      ;C0DB47|9003    |C0DB4C;  
                        JMP.W CODE_C0DBC7                    ;C0DB49|4CC7DB  |C0DBC7;  
                                                             ;      |        |      ;  
@@ -13433,7 +13433,7 @@
                        db $00,$7F,$A5,$A5,$9F,$00,$1C,$7F   ;C0EA31|        |      ;  
                        db $E6,$AF,$E6,$AF,$60,$60           ;C0EA39|        |0000AF;  
                                                             ;      |        |      ;  
-          CODE_C0EA3F: REP #$30                             ;C0EA3F|C230    |      ; !
+          CODE_C0EA3F: REP #$30                             ;C0EA3F|C230    |      ; @
                        LDA.B $60                            ;C0EA41|A560    |000060;  
                        ORA.B $62                            ;C0EA43|0562    |000062;  
                        AND.W #$1000                         ;C0EA45|290010  |      ; Check if either player pressed Start
@@ -13478,13 +13478,32 @@
                        STA.W $1E05                          ;C0EA92|8D051E  |001E05;  
                        RTS                                  ;C0EA95|60      |      ;  
                                                             ;      |        |      ;  
-                                                            ;      |        |      ;  
-       UNREACH_C0EA96: db $64,$A3,$64,$AB,$64,$A7,$64,$A5   ;C0EA96|        |0000A3;  
-                       db $64,$AD,$64,$A9,$E2,$20,$A9,$01   ;C0EA9E|        |0000AD;  
-                       db $8D,$05,$1E,$60                   ;C0EAA6|        |001E05;  
-                                                            ;      |        |      ;  
-       UNREACH_C0EAAA: db $E2,$30,$A9,$01,$85,$71,$8D,$04   ;C0EAAA|        |      ;  
-                       db $1E,$22,$D0,$83,$80,$90,$01,$60   ;C0EAB2|        |00D022;  
+                                                            ;      |        |      ;
+
+    ;; The following two functions were not reached as part of disassembly. Manually converted.
+    ;; Clears out player input history, stores 1 in $1E05
+           UNREACH_C0EA96: STZ.B $A3
+                STZ.B $AB
+                STZ.B $A7
+                STZ.B $A5
+                STZ.B $AD
+                STZ.B $A9
+                SEP $20
+                LDA.B #$01
+                STA.W $1E05
+                RTS
+
+    ;; Clears out player input history, stores $71 in $1E04, calls external function (unchecked)
+            UNREACH_C0EAAA: SEP $30
+                LDA.B #$01
+                STA.B $71
+                STA.W $1E04
+                JSL.L CODE_8083D0
+                BCC $01
+                RTS
+
+
+    ;; This looks like code too, starting with a SEP 30 and all.
                        db $E2,$30,$AD,$01,$10,$F0,$09,$C9   ;C0EABA|        |      ;  
                        db $21,$F0,$05,$C9,$1F,$F0,$01,$60   ;C0EAC2|        |0000F0;  
                        db $AD,$81,$10,$F0,$09,$C9,$21,$F0   ;C0EACA|        |001081;  
