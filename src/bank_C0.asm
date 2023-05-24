@@ -13513,10 +13513,18 @@
                 BEQ UNREACH_C0EACA
                 RTS
 
-UNREACH_C0EACA:
-                       db $AD,$81,$10,$F0,$09,$C9,$21,$F0   ;C0EACA|        |001081;
-                       db $05,$C9,$1F,$F0,$01,$60,$AD,$49   ;C0EAD2|        |0000C9;  
-                       db $10,$CD,$00,$08,$D0,$1B,$AD,$C9   ;C0EADA|        |C0EAA9;  
+            UNREACH_C0EACA:
+                LDA.W $1081
+                BEQ UNREACH_C0EAD8
+                CMP $21
+                BEQ UNREACH_C0EAD8
+                CMP $1F
+                BEQ UNREACH_C0EAD8
+                RTS
+
+UNREACH_C0EAD8: LDA.W $1049
+
+                       db $CD,$00,$08,$D0,$1B,$AD,$C9   ;C0EADA|        |C0EAA9;
                        db $10,$CD,$01,$08,$D0,$13,$A9,$01   ;C0EAE2|        |C0EAB1;  
                        db $8D,$05,$1E,$C2,$20,$64,$A3,$64   ;C0EAEA|        |001E05;  
                        db $AB,$64,$A7,$64,$A5,$64,$AD,$64   ;C0EAF2|        |      ;  
