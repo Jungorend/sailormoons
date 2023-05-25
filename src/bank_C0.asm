@@ -13488,14 +13488,14 @@
                 STZ.B $A5
                 STZ.B $AD
                 STZ.B $A9
-                SEP $20
+                SEP #$20
                 LDA.B #$01
                 STA.W $1E05
                 RTS
 
     ;; Clears out player input history, stores $71 in $1E04, calls external function (unchecked)
     ;; continues to next segment if C flag set on return
-            UNREACH_C0EAAA: SEP $30
+            UNREACH_C0EAAA: SEP #$30
                 LDA.B #$01
                 STA.B $71
                 STA.W $1E04
@@ -13504,7 +13504,7 @@
                 RTS
 
     ;; This looks like code too, starting with a SEP 30 and all.
-            UNREACH_C0EABA:  SEP $30
+            UNREACH_C0EABA:  SEP #$30
                 LDA.W $1001
                 BEQ UNREACH_C0EACA ; Return unless $1001 is 0, $21, or $1F
                 CMP #$21
