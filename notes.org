@@ -40,3 +40,8 @@
   $0b00 looks worth looking into too
 - $1d00 is p1 character, $1d03 is p2 character
   $1d02 is p1 character color
+- At some point on load of scenes, 54 7f c0 6b 7f 7f 6b gets written to c8. this is a mvn opcode. :O 808dc9 writes to it on load. c01e83 on stage select
+  MVN #$7F, #$C0
+  RTL
+  MVN #$7F, #$7F
+  RTL
