@@ -8,6 +8,14 @@
     !Neptune = $07
     !Pluto = $08
     !Chibi = $09
+    !Haruka_100_Percent = $53,$4D,$5F,$31,$20,$48,$41,$52,$55,$4B,$41,$20,$31,$30,$30,$25 ; SM_1 Haruka 100%
+
+    ; Common MMIO
+    !APUIO0 = $2140
+    !APUIO1 = $2141
+    !APUIO2 = $2142
+    !APUIO3 = $2143
+
                                                             ;      |        |      ;  
                        incsrc "bank_C0.asm"                 ;      |        |      ;  
                        incsrc "bank_C1.asm"                 ;      |        |      ;  

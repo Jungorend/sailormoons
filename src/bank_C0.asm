@@ -4285,20 +4285,23 @@
                        db $00,$D9,$00,$00,$D0,$0C,$E8,$E8   ;C08021|        |      ;  
                        db $C8,$C8,$C0,$44,$81,$D0,$F0,$4C   ;C08029|        |      ;  
                        db $DC,$80                           ;C08031|        |008B80;  
-                                                            ;      |        |      ;  
-          CODE_C08033: PHB                                  ;C08033|8B      |      ;  
-                       STZ.B $00                            ;C08034|6400    |000000;  
-                       LDX.W #$0000                         ;C08036|A20000  |      ;  
-                       LDY.W #$0001                         ;C08039|A00100  |      ;  
-                       LDA.W #$1FFE                         ;C0803C|A9FE1F  |      ;  
-                       MVN $00,$00                          ;C0803F|540000  |      ;  
-                       LDA.W #$0000                         ;C08042|A90000  |      ;  
-                       STA.L $7F0000                        ;C08045|8F00007F|7F0000;  
-                       LDX.W #$0000                         ;C08049|A20000  |      ;  
-                       LDY.W #$0001                         ;C0804C|A00100  |      ;  
-                       LDA.W #$F7FE                         ;C0804F|A9FEF7  |      ;  
-                       MVN $7F,$7F                          ;C08052|547F7F  |      ;  
-                       PLB                                  ;C08055|AB      |      ;  
+                                                            ;      |        |      ;
+
+    ;; Happens on initialize
+          CODE_C08033: PHB                                  ;C08033
+                       STZ.B $00
+                       LDX.W #$0000
+                       LDY.W #$0001
+                       LDA.W #$1FFE
+                       MVN $00,$00       ; Zero out the first 1FFF bytes (8191 bytes)
+                       LDA.W #$0000
+                       STA.L $7F0000
+                       LDX.W #$0000
+                       LDY.W #$0001
+                       LDA.W #$F7FE
+                       MVN $7F,$7F       ; Zero out the first F7FF bytes of bank 7F (7F0000-7FF7FF)
+                       PLB                                  ;C08055|AB      |      ;
+
                        LDA.W #$4000                         ;C08056|A90040  |      ;  
                        STA.W $1F10                          ;C08059|8D101F  |001F10;  
                        STA.W $1F1C                          ;C0805C|8D1C1F  |001F1C;  
@@ -4336,17 +4339,17 @@
                        LDA.W #$0008                         ;C080BC|A90800  |      ;  
                        STA.W $1F5A                          ;C080BF|8D5A1F  |001F5A;  
                        PHB                                  ;C080C2|8B      |      ;  
-                       LDX.W #$8134                         ;C080C3|A23481  |      ;  
-                       LDY.W #$1F00                         ;C080C6|A0001F  |      ;  
-                       LDA.W #$000F                         ;C080C9|A90F00  |      ;  
-                       MVN $00,$80                          ;C080CC|540080  |      ;  
-                       LDX.W #$8134                         ;C080CF|A23481  |      ;  
-                       LDY.W #$1FF0                         ;C080D2|A0F01F  |      ;  
-                       LDA.W #$000F                         ;C080D5|A90F00  |      ;  
-                       MVN $00,$80                          ;C080D8|540080  |      ;  
+                       LDX.W #$8134
+                       LDY.W #$1F00
+                       LDA.W #$000F
+                       MVN $00,$80                          ; Copy "SM_1 Haruka 100%" to $001F00
+                       LDX.W #$8134
+                       LDY.W #$1FF0
+                       LDA.W #$000F
+                       MVN $00,$80                          ; Copy "SM_1 Haruka 100%" to $001FF0
                        PLB                                  ;C080DB|AB      |      ;  
                        SEP #$20                             ;C080DC|E220    |      ;  
-                       LDA.B #$54                           ;C080DE|A954    |      ;  
+                       LDA.B #$54                           ; Store #$54 into $80 and $84
                        STA.B $80                            ;C080E0|8580    |000080;  
                        STA.B $84                            ;C080E2|8584    |000084;  
                        LDA.B #$60                           ;C080E4|A960    |      ;  
@@ -4362,37 +4365,38 @@
                        LDA.B #$03                           ;C080F5|A903    |      ;  
                        STA.B $8A                            ;C080F7|858A    |00008A;  
                        REP #$30                             ;C080F9|C230    |      ;  
-                       LDA.W #$C0B4                         ;C080FB|A9B4C0  |      ;  
-                       STA.B $00                            ;C080FE|8500    |000000;  
-                       LDA.W #$00E7                         ;C08100|A9E700  |      ;  
-                       STA.B $02                            ;C08103|8502    |000002;  
-                       JSR.W CODE_C0EBFB                    ;C08105|20FBEB  |C0EBFB;  
-                       LDA.W #$C15D                         ;C08108|A95DC1  |      ;  
-                       STA.B $00                            ;C0810B|8500    |000000;  
-                       LDA.W #$00E7                         ;C0810D|A9E700  |      ;  
-                       STA.B $02                            ;C08110|8502    |000002;  
-                       JSR.W CODE_C0EBFB                    ;C08112|20FBEB  |C0EBFB;  
-                       LDA.W #$0000                         ;C08115|A90000  |      ;  
-                       STA.B $00                            ;C08118|8500    |000000;  
-                       LDA.W #$00E4                         ;C0811A|A9E400  |      ;  
-                       STA.B $02                            ;C0811D|8502    |000002;  
-                       JSR.W CODE_C0EBFB                    ;C0811F|20FBEB  |C0EBFB;  
-                       LDA.W #$7808                         ;C08122|A90878  |      ;  
-                       STA.B $00                            ;C08125|8500    |000000;  
-                       LDA.W #$00E4                         ;C08127|A9E400  |      ;  
-                       STA.B $02                            ;C0812A|8502    |000002;  
-                       JSR.W CODE_C0EBFB                    ;C0812C|20FBEB  |C0EBFB;  
+                       LDA.W #$C0B4                         ; $E7C0B4 is used for setting
+                       STA.B $00                            ; the starting audio address
+                       LDA.W #$00E7
+                       STA.B $02
+                       JSR.W CODE_C0EBFB                    ; Seems $E7C0B4 data to APU
+                       LDA.W #$C15D
+                       STA.B $00
+                       LDA.W #$00E7
+                       STA.B $02
+                       JSR.W CODE_C0EBFB                    ; Sends $E8C15D data to APU
+                       LDA.W #$0000
+                       STA.B $00
+                       LDA.W #$00E4
+                       STA.B $02
+                       JSR.W CODE_C0EBFB                    ; Sends $E40000 data to APU
+                       LDA.W #$7808
+                       STA.B $00
+                       LDA.W #$00E4
+                       STA.B $02
+                       JSR.W CODE_C0EBFB                    ; Sends $E47808 data to APU
                        JSR.W CODE_C0EBAE                    ;C0812F|20AEEB  |C0EBAE;  
                        PLP                                  ;C08132|28      |      ;  
                        RTS                                  ;C08133|60      |      ;  
-                                                            ;      |        |      ;  
-                       db $53,$4D,$5F,$31,$20,$48,$41,$52   ;C08134|        |00004D;  SM_1 HARUKA 100%
-                       db $55,$4B,$41,$20,$31,$30,$30,$25   ;C0813C|        |00004B;  
-                                                            ;      |        |      ;  
+                                                            ;      |        |      ;
+
+    ;; C08134
+                       db !Haruka_100_Percent
+                                                            ;      |        |      ;
           CODE_C08144: PHB                                  ;C08144|8B      |      ;  
                        JSR.W CODE_C08217                    ;C08145|201782  |C08217;  
                        JSR.W CODE_C0815D                    ;C08148|205D81  |C0815D;  
-                       JSR.W CODE_C08194                    ;C0814B|209481  |C08194;  
+                       JSR.W CODE_C08194                    ; Sets defaults to $200 and $400
                        JSR.W CODE_C081EB                    ;C0814E|20EB81  |C081EB;  
                        PLB                                  ;C08151|AB      |      ;  
                        RTS                                  ;C08152|60      |      ;  
@@ -4424,26 +4428,29 @@
                        RTS                                  ;C08191|60      |      ;  
                                                             ;      |        |      ;  
                        db $00,$00                           ;C08192|        |      ;  
-                                                            ;      |        |      ;  
-          CODE_C08194: PHP                                  ;C08194|08      |      ;  
-                       PHB                                  ;C08195|8B      |      ;  
-                       REP #$30                             ;C08196|C230    |      ;  
-                       LDA.W #$E0E0                         ;C08198|A9E0E0  |      ;  
-                       STA.W $0200                          ;C0819B|8D0002  |000200;  
-                       LDX.W #$0200                         ;C0819E|A20002  |      ;  
-                       LDY.W #$0201                         ;C081A1|A00102  |      ;  
-                       LDA.W #$01FE                         ;C081A4|A9FE01  |      ;  
-                       MVN $00,$00                          ;C081A7|540000  |      ;  
-                       STZ.W $0400                          ;C081AA|9C0004  |000400;  
-                       LDX.W #$0400                         ;C081AD|A20004  |      ;  
-                       LDY.W #$0401                         ;C081B0|A00104  |      ;  
-                       LDA.W #$001E                         ;C081B3|A91E00  |      ;  
-                       MVN $00,$00                          ;C081B6|540000  |      ;  
-                       PLB                                  ;C081B9|AB      |      ;  
-                       PLP                                  ;C081BA|28      |      ;  
-                       RTS                                  ;C081BB|60      |      ;  
-                                                            ;      |        |      ;  
-                       db $E2,$30,$9C,$02,$21,$9C,$03,$21   ;C081BC|        |      ;  
+                                                            ;      |        |      ;
+
+    ;; This function seems to just default zones $200 and $400
+          CODE_C08194: PHP
+                       PHB
+                       REP #$30
+                       LDA.W #$E0E0
+                       STA.W $0200
+                       LDX.W #$0200
+                       LDY.W #$0201
+                       LDA.W #$01FE
+                       MVN $00,$00                          ; Copies #$E0 to bytes $200 to $3FF
+                       STZ.W $0400
+                       LDX.W #$0400
+                       LDY.W #$0401
+                       LDA.W #$001E
+                       MVN $00,$00                          ; Copies #$00 to bytes $400 to $41F
+                       PLB
+                       PLP
+                       RTS
+
+
+                       db $E2,$30,$9C,$02,$21,$9C,$03,$21   ;C081BC|        |      ;
                        db $9C,$00,$43,$A9,$04,$8D,$01,$43   ;C081C4|        |004300;  
                        db $A9,$00,$8D,$02,$43,$A9,$02,$8D   ;C081CC|        |      ;  
                        db $03,$43,$A9,$00,$8D,$04,$43,$A9   ;C081D4|        |000043;  
@@ -4470,7 +4477,7 @@
                        RTS                                  ;C08216|60      |      ;  
                                                             ;      |        |      ;  
                                                             ;      |        |      ;  
-          CODE_C08217: SEP #$30                             ;C08217|E230    |      ;  
+          CODE_C08217: SEP #$30                             ;C08217|E230    |      ; Whole lot of initialization
                        LDA.B #$8F                           ;C08219|A98F    |      ;  
                        STA.W $2100                          ;C0821B|8D0021  |002100;  
                        STZ.W $4200                          ;C0821E|9C0042  |004200;  
@@ -6684,37 +6691,39 @@
                        STA.W $1F26                          ;C09781|8D261F  |801F26;  
                        PLB                                  ;C09784|AB      |      ;  
                        RTL                                  ;C09785|6B      |      ;  
-                                                            ;      |        |      ;  
-                       PHB                                  ;C09786|8B      |      ;  
-                       PHK                                  ;C09787|4B      |      ;  
-                       PLB                                  ;C09788|AB      |      ;  
-                       REP #$30                             ;C09789|C230    |      ;  
-                       LDA.W $1F10                          ;C0978B|AD101F  |801F10;  
-                       STA.W $1E20                          ;C0978E|8D201E  |801E20;  
-                       LDA.W $1F12                          ;C09791|AD121F  |801F12;  
-                       STA.W $1E22                          ;C09794|8D221E  |801E22;  
-                       LDA.W $1F14                          ;C09797|AD141F  |801F14;  
-                       STA.W $1E24                          ;C0979A|8D241E  |801E24;  
-                       LDA.W $1F16                          ;C0979D|AD161F  |801F16;  
-                       STA.W $1E26                          ;C097A0|8D261E  |801E26;  
-                       LDA.W $1F18                          ;C097A3|AD181F  |801F18;  
-                       STA.W $1E28                          ;C097A6|8D281E  |801E28;  
-                       LDA.W $1F1A                          ;C097A9|AD1A1F  |801F1A;  
-                       STA.W $1E2A                          ;C097AC|8D2A1E  |801E2A;  
-                       LDA.W $1F1C                          ;C097AF|AD1C1F  |801F1C;  
-                       STA.W $1E2C                          ;C097B2|8D2C1E  |801E2C;  
-                       LDA.W $1F1E                          ;C097B5|AD1E1F  |801F1E;  
-                       STA.W $1E2E                          ;C097B8|8D2E1E  |801E2E;  
-                       LDA.W $1F20                          ;C097BB|AD201F  |801F20;  
-                       STA.W $1E30                          ;C097BE|8D301E  |801E30;  
-                       LDA.W $1F22                          ;C097C1|AD221F  |801F22;  
-                       STA.W $1E32                          ;C097C4|8D321E  |801E32;  
-                       LDA.W $1F24                          ;C097C7|AD241F  |801F24;  
-                       STA.W $1E34                          ;C097CA|8D341E  |801E34;  
-                       LDA.W $1F26                          ;C097CD|AD261F  |801F26;  
-                       STA.W $1E36                          ;C097D0|8D361E  |801E36;  
-                       PLB                                  ;C097D3|AB      |      ;  
-                       RTL                                  ;C097D4|6B      |      ;  
+
+    ;; Copy $1F10 through $1F26
+    ;; to   $1E20 through $1E36
+                       PHB                                  ;C09786
+                       PHK
+                       PLB
+                       REP #$30
+                       LDA.W $1F10
+                       STA.W $1E20
+                       LDA.W $1F12
+                       STA.W $1E22
+                       LDA.W $1F14
+                       STA.W $1E24
+                       LDA.W $1F16
+                       STA.W $1E26
+                       LDA.W $1F18
+                       STA.W $1E28
+                       LDA.W $1F1A
+                       STA.W $1E2A
+                       LDA.W $1F1C
+                       STA.W $1E2C
+                       LDA.W $1F1E
+                       STA.W $1E2E
+                       LDA.W $1F20
+                       STA.W $1E30
+                       LDA.W $1F22
+                       STA.W $1E32
+                       LDA.W $1F24
+                       STA.W $1E34
+                       LDA.W $1F26
+                       STA.W $1E36
+                       PLB
+                       RTL
                                                             ;      |        |      ;  
                        db $8B,$4B,$AB,$C2,$30,$AD,$06,$1D   ;C097D5|        |      ;  
                        db $29,$FF,$00,$0A,$0A,$0A,$0A,$18   ;C097DD|        |      ;  
@@ -7744,7 +7753,9 @@
                        PLB                                  ;C0A0CE|AB      |      ;  
                        RTL                                  ;C0A0CF|6B      |      ;  
                                                             ;      |        |      ;  
-                                                            ;      |        |      ;  
+                                                            ;      |        |      ;
+    ;;  Title loop
+    ;;  Each call to JSR.W (UNREACH_C0A0E3,X) will either load the opening or a demo
           CODE_C0A0D0: REP #$30                             ;C0A0D0|C230    |      ;  
                        JSR.W CODE_C08144                    ;C0A0D2|204481  |C08144;  
                        JSR.W CODE_C08D7D                    ;C0A0D5|207D8D  |C08D7D;  
@@ -13631,15 +13642,22 @@ UNREACH_C0EAD8: LDA.W $1049
                                                             ;      |        |      ;  
           CODE_C0EBF7: STZ.W $2142                          ;C0EBF7|9C4221  |802142;  
                        RTS                                  ;C0EBFA|60      |      ;  
-                                                            ;      |        |      ;  
-                                                            ;      |        |      ;  
-          CODE_C0EBFB: PHP                                  ;C0EBFB|08      |      ;  
-                       REP #$30                             ;C0EBFC|C230    |      ;  
-                       LDY.W #$0000                         ;C0EBFE|A00000  |      ;  
-                       LDA.W #$BBAA                         ;C0EC01|A9AABB  |      ;  
-                                                            ;      |        |      ;  
-          CODE_C0EC04: CMP.W $2140                          ;C0EC04|CD4021  |802140;  
-                       BNE CODE_C0EC04                      ;C0EC07|D0FB    |C0EC04;  
+                                                            ;      |        |      ;
+
+
+
+    ;;      This function segment expects an address as $00-$02
+    ;;      It reads in that function, then copies the data over to the APU.
+    ;;      Structure it reads in seems to be:
+    ;;      Number of bytes to read in: 2 bytes
+    ;;      destination address on APU: 2 bytes
+          CODE_C0EBFB: PHP
+                       REP #$30
+                       LDY.W #$0000
+                       LDA.W #$BBAA
+
+          CODE_C0EC04: CMP.W !APUIO0
+                       BNE CODE_C0EC04                      ; Polls until the APU is ready
                        SEP #$20                             ;C0EC09|E220    |      ;  
                        LDA.B #$CC                           ;C0EC0B|A9CC    |      ;  
                        BRA CODE_C0EC35                      ;C0EC0D|8026    |C0EC35;  
@@ -13648,56 +13666,59 @@ UNREACH_C0EAD8: LDA.W $1049
           CODE_C0EC0F: LDA.B [$00],Y                        ;C0EC0F|B700    |000000;  
                        INY                                  ;C0EC11|C8      |      ;  
                        XBA                                  ;C0EC12|EB      |      ;  
-                       LDA.B #$00                           ;C0EC13|A900    |      ;  
-                       BRA CODE_C0EC22                      ;C0EC15|800B    |C0EC22;  
+                       LDA.B #$00                           ;C0EC13|A900    |      ;  Largely this code loops
+                       BRA CODE_C0EC22                      ;C0EC15|800B    |C0EC22;  sending the values in [$00] offset by Y
+                                                            ;      |        |      ;  over to the APU one byte at a time
                                                             ;      |        |      ;  
-                                                            ;      |        |      ;  
-          CODE_C0EC17: XBA                                  ;C0EC17|EB      |      ;  
+          CODE_C0EC17: XBA                                  ;C0EC17|EB      |      ;  checking via APUIO0 whether it is ready or not
                        LDA.B [$00],Y                        ;C0EC18|B700    |000000;  
                        INY                                  ;C0EC1A|C8      |      ;  
                        XBA                                  ;C0EC1B|EB      |      ;  
                                                             ;      |        |      ;  
-          CODE_C0EC1C: CMP.W $2140                          ;C0EC1C|CD4021  |802140;  
+          CODE_C0EC1C: CMP.W !APUIO0                          ;C0EC1C|CD4021  |802140;
                        BNE CODE_C0EC1C                      ;C0EC1F|D0FB    |C0EC1C;  
                        INC A                                ;C0EC21|1A      |      ;  
                                                             ;      |        |      ;  
           CODE_C0EC22: REP #$20                             ;C0EC22|C220    |      ;  
-                       STA.W $2140                          ;C0EC24|8D4021  |802140;  
+                       STA.W !APUIO0                          ;C0EC24|8D4021  |802140;
                        SEP #$20                             ;C0EC27|E220    |      ;  
                        DEX                                  ;C0EC29|CA      |      ;  
                        BNE CODE_C0EC17                      ;C0EC2A|D0EB    |C0EC17;  
                                                             ;      |        |      ;  
-          CODE_C0EC2C: CMP.W $2140                          ;C0EC2C|CD4021  |802140;  
+          CODE_C0EC2C: CMP.W !APUIO0                          ;C0EC2C|CD4021  |802140;
                        BNE CODE_C0EC2C                      ;C0EC2F|D0FB    |C0EC2C;  
                                                             ;      |        |      ;  
           CODE_C0EC31: ADC.B #$03                           ;C0EC31|6903    |      ;  
                        BEQ CODE_C0EC31                      ;C0EC33|F0FC    |C0EC31;  
                                                             ;      |        |      ;  
-          CODE_C0EC35: PHA                                  ;C0EC35|48      |      ;  
+          CODE_C0EC35: PHA                                  ;C0EC35|48      |      ;
                        REP #$20                             ;C0EC36|C220    |      ;  
                        LDA.B [$00],Y                        ;C0EC38|B700    |000000;  
                        INY                                  ;C0EC3A|C8      |      ;  
                        INY                                  ;C0EC3B|C8      |      ;  
-                       TAX                                  ;C0EC3C|AA      |      ;  
+                       TAX                                  ;C0EC3C|AA      |      ; The first value pulled in is used for determining how many bytes to send
                        LDA.B [$00],Y                        ;C0EC3D|B700    |000000;  
                        INY                                  ;C0EC3F|C8      |      ;  
                        INY                                  ;C0EC40|C8      |      ;  
-                       STA.W $2142                          ;C0EC41|8D4221  |802142;  
+                       STA.W !APUIO2                          ;C0EC41|8D4221  |802142;
                        SEP #$20                             ;C0EC44|E220    |      ;  
                        CPX.W #$0001                         ;C0EC46|E00100  |      ;  
                        LDA.B #$00                           ;C0EC49|A900    |      ;  
                        ROL A                                ;C0EC4B|2A      |      ;  
-                       STA.W $2141                          ;C0EC4C|8D4121  |802141;  
+                       STA.W !APUIO1                          ;C0EC4C|8D4121  |802141;
                        ADC.B #$7F                           ;C0EC4F|697F    |      ;  
                        PLA                                  ;C0EC51|68      |      ;  
-                       STA.W $2140                          ;C0EC52|8D4021  |802140;  
+                       STA.W !APUIO0                          ;C0EC52|8D4021  |802140;
                                                             ;      |        |      ;  
           CODE_C0EC55: CMP.W $2140                          ;C0EC55|CD4021  |802140;  
                        BNE CODE_C0EC55                      ;C0EC58|D0FB    |C0EC55;  
                        BVS CODE_C0EC0F                      ;C0EC5A|70B3    |C0EC0F;  
                        PLP                                  ;C0EC5C|28      |      ;  
                        RTS                                  ;C0EC5D|60      |      ;  
-                                                            ;      |        |      ;  
+                                                            ;      |        |      ;
+
+
+                                                            ;
                        PHB                                  ;C0EC5E|8B      |      ;  
                        PHK                                  ;C0EC5F|4B      |      ;  
                        PLB                                  ;C0EC60|AB      |      ;  

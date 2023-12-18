@@ -25,6 +25,7 @@
 ** Notable Functions
 - CSS_UPDATE_P1_CHAR
   On the CSS Screen, reads player one movement and sets the character code P1 is set to. Uses Character Selection Grid.
+- C0EBFB handles sending audio data to APU.
 
 * C0 Databanks
 - Character Selection Grid
@@ -45,3 +46,14 @@
   RTL
   MVN #$7F, #$7F
   RTL
+
+  JSR in instruction C3867c step over caused gong and tile viewer update
+  83869A caused color palette update
+
+  digging into one of the title screen updates, 80a23b is when we see it happen, but it was likely set before that as 80a21f onwards I see it manipulating data in $00 that I think it uses
+  by the end of the function call at 80a278, it's updated the tileset to point at 4000 and is what we would expect it to look like. So The functions starting at 80a214 are our best bet to investigate further.
+
+  - Potential breakpoints:
+    83832E tiles load in this
+    80A23B the start of the function where tiles load and then are corrected
+    80A0DE top level, each time it runs we see a demo above and it reloads things
