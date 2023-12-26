@@ -4393,8 +4393,8 @@
     ;; C08134
                        db !Haruka_100_Percent
                                                             ;      |        |      ;
-          CODE_C08144: PHB                                  ;C08144|8B      |      ;  
-                       JSR.W CODE_C08217                    ;C08145|201782  |C08217;  
+          CODE_C08144: PHB                                  ;C08144|8B      |      ;
+                       JSR.W RESET_PPU_CONFIGURATION                    ;C08145|201782  |C08217;
                        JSR.W CODE_C0815D                    ;C08148|205D81  |C0815D;  
                        JSR.W CODE_C08194                    ; Sets defaults to $200 and $400
                        JSR.W CODE_C081EB                    ;C0814E|20EB81  |C081EB;  
@@ -4475,91 +4475,92 @@
                        LDA.B #$01                           ;C08211|A901    |      ;  
                        STA.W $420B                          ;C08213|8D0B42  |00420B;  
                        RTS                                  ;C08216|60      |      ;  
-                                                            ;      |        |      ;  
-                                                            ;      |        |      ;  
-          CODE_C08217: SEP #$30                             ;C08217|E230    |      ; Whole lot of initialization
-                       LDA.B #$8F                           ;C08219|A98F    |      ;  
-                       STA.W $2100                          ;C0821B|8D0021  |002100;  
-                       STZ.W $4200                          ;C0821E|9C0042  |004200;  
-                       LDA.B #$00                           ;C08221|A900    |      ;  
-                       STA.W $2101                          ;C08223|8D0121  |002101;  
-                       STA.W $2102                          ;C08226|8D0221  |002102;  
-                       STA.W $2103                          ;C08229|8D0321  |002103;  
-                       STA.W $2105                          ;C0822C|8D0521  |002105;  
-                       STA.W $2106                          ;C0822F|8D0621  |002106;  
-                       STA.W $2107                          ;C08232|8D0721  |002107;  
-                       STA.W $2108                          ;C08235|8D0821  |002108;  
-                       STA.W $2109                          ;C08238|8D0921  |002109;  
-                       STA.W $210A                          ;C0823B|8D0A21  |00210A;  
-                       STA.W $210B                          ;C0823E|8D0B21  |00210B;  
-                       STA.W $210C                          ;C08241|8D0C21  |00210C;  
-                       STA.W $210D                          ;C08244|8D0D21  |00210D;  
-                       STA.W $210E                          ;C08247|8D0E21  |00210E;  
-                       STA.W $210F                          ;C0824A|8D0F21  |00210F;  
-                       STA.W $2110                          ;C0824D|8D1021  |002110;  
-                       STA.W $2111                          ;C08250|8D1121  |002111;  
-                       STA.W $2112                          ;C08253|8D1221  |002112;  
-                       STA.W $2113                          ;C08256|8D1321  |002113;  
-                       STA.W $2114                          ;C08259|8D1421  |002114;  
-                       LDA.B #$80                           ;C0825C|A980    |      ;  
-                       STA.W $2115                          ;C0825E|8D1521  |002115;  
-                       LDA.B #$00                           ;C08261|A900    |      ;  
-                       STA.W $211A                          ;C08263|8D1A21  |00211A;  
-                       LDA.B #$00                           ;C08266|A900    |      ;  
-                       STA.W $211B                          ;C08268|8D1B21  |00211B;  
-                       LDA.B #$01                           ;C0826B|A901    |      ;  
-                       STA.W $211B                          ;C0826D|8D1B21  |00211B;  
-                       LDA.B #$00                           ;C08270|A900    |      ;  
-                       STA.W $211C                          ;C08272|8D1C21  |00211C;  
-                       STA.W $211C                          ;C08275|8D1C21  |00211C;  
-                       STA.W $211D                          ;C08278|8D1D21  |00211D;  
-                       STA.W $211D                          ;C0827B|8D1D21  |00211D;  
-                       LDA.B #$00                           ;C0827E|A900    |      ;  
-                       STA.W $211E                          ;C08280|8D1E21  |00211E;  
-                       LDA.B #$01                           ;C08283|A901    |      ;  
-                       STA.W $211E                          ;C08285|8D1E21  |00211E;  
-                       LDA.B #$00                           ;C08288|A900    |      ;  
-                       STA.W $211F                          ;C0828A|8D1F21  |00211F;  
-                       STA.W $211F                          ;C0828D|8D1F21  |00211F;  
-                       STA.W $2120                          ;C08290|8D2021  |002120;  
-                       STA.W $2120                          ;C08293|8D2021  |002120;  
-                       STA.W $2123                          ;C08296|8D2321  |002123;  
-                       STA.W $2124                          ;C08299|8D2421  |002124;  
-                       STA.W $2125                          ;C0829C|8D2521  |002125;  
-                       STA.W $2126                          ;C0829F|8D2621  |002126;  
-                       STA.W $2127                          ;C082A2|8D2721  |002127;  
-                       STA.W $2128                          ;C082A5|8D2821  |002128;  
-                       STA.W $2129                          ;C082A8|8D2921  |002129;  
-                       STA.W $212A                          ;C082AB|8D2A21  |00212A;  
-                       STA.W $212B                          ;C082AE|8D2B21  |00212B;  
-                       STA.W $212C                          ;C082B1|8D2C21  |00212C;  
-                       STA.W $212D                          ;C082B4|8D2D21  |00212D;  
-                       STA.W $212E                          ;C082B7|8D2E21  |00212E;  
-                       STA.W $212F                          ;C082BA|8D2F21  |00212F;  
-                       LDA.B #$30                           ;C082BD|A930    |      ;  
-                       STA.W $2130                          ;C082BF|8D3021  |002130;  
-                       LDA.B #$00                           ;C082C2|A900    |      ;  
-                       STA.W $2131                          ;C082C4|8D3121  |002131;  
-                       LDA.B #$E0                           ;C082C7|A9E0    |      ;  
-                       STA.W $2132                          ;C082C9|8D3221  |002132;  
-                       LDA.B #$00                           ;C082CC|A900    |      ;  
-                       STA.W $2133                          ;C082CE|8D3321  |002133;  
-                       LDA.B #$FF                           ;C082D1|A9FF    |      ;  
-                       STA.W $4201                          ;C082D3|8D0142  |004201;  
-                       LDA.B #$00                           ;C082D6|A900    |      ;  
-                       STA.W $4202                          ;C082D8|8D0242  |004202;  
-                       STA.W $4203                          ;C082DB|8D0342  |004203;  
-                       STA.W $4204                          ;C082DE|8D0442  |004204;  
-                       STA.W $4205                          ;C082E1|8D0542  |004205;  
-                       STA.W $4206                          ;C082E4|8D0642  |004206;  
-                       STA.W $4207                          ;C082E7|8D0742  |004207;  
-                       STA.W $4208                          ;C082EA|8D0842  |004208;  
-                       STA.W $4209                          ;C082ED|8D0942  |004209;  
-                       STA.W $420A                          ;C082F0|8D0A42  |00420A;  
-                       STA.W $420B                          ;C082F3|8D0B42  |00420B;  
-                       STA.W $420C                          ;C082F6|8D0C42  |00420C;  
-                       STA.W $420D                          ;C082F9|8D0D42  |00420D;  
-                       RTS                                  ;C082FC|60      |      ;  
+
+
+    ;; Stops all byte transfers and resets all video and joypad settings to fresh
+          RESET_PPU_CONFIGURATION: SEP #$30
+                       LDA.B #$8F
+                       STA.W !INIDISP                       ; Force Blanking and Max Brightness
+                       STZ.W $4200                          ; Disable NMI and joypad autoread
+                       LDA.B #$00
+                       STA.W $2101                          ; Sprites set to 8x8 and 16x16, at address 0
+                       STA.W $2102                          ; Zero the OAM address
+                       STA.W $2103
+                       STA.W $2105                          ; BG mode 0. 8x8 tile sizes
+                       STA.W $2106                          ; No mosaic
+                       STA.W $2107                          ; Zero out tilemap addresses
+                       STA.W $2108
+                       STA.W $2109
+                       STA.W $210A
+                       STA.W $210B                          ; Zero out background CHR
+                       STA.W $210C
+                       STA.W $210D                          ; Zero scroll offsets to 0 for each bg
+                       STA.W $210E
+                       STA.W $210F
+                       STA.W $2110
+                       STA.W $2111
+                       STA.W $2112
+                       STA.W $2113
+                       STA.W $2114
+                       LDA.B #$80
+                       STA.W $2115                          ; When writing to VDATA ($2119) or reading ($213A), increment address by 1 word
+                       LDA.B #$00
+                       STA.W $211A                          ; Zero out mode 7 settings
+                       LDA.B #$00                           ; TODO: Remove? UNNECESSARY
+                       STA.W $211B
+                       LDA.B #$01                           ; Set M7A to 256 (used for multiplication with M7B)
+                       STA.W $211B
+                       LDA.B #$00
+                       STA.W $211C                          ; M7B set to 0
+                       STA.W $211C
+                       STA.W $211D                          ; M7C zeroed
+                       STA.W $211D
+                       LDA.B #$00                           ; TODO: Remove? UNNECESSARY
+                       STA.W $211E                          ; M7D set to 256
+                       LDA.B #$01
+                       STA.W $211E
+                       LDA.B #$00                           ; M7X zeroed
+                       STA.W $211F
+                       STA.W $211F
+                       STA.W $2120                          ; M7Y zeroed
+                       STA.W $2120
+                       STA.W $2123                          ; Disable windows masks
+                       STA.W $2124
+                       STA.W $2125
+                       STA.W $2126                          ; Zero window positions
+                       STA.W $2127
+                       STA.W $2128
+                       STA.W $2129
+                       STA.W $212A                          ; Zero window mask logic
+                       STA.W $212B
+                       STA.W $212C                          ; Turn off all backgrounds on main screen
+                       STA.W $212D                          ; Turn off all backgrounds on subscreen
+                       STA.W $212E                          ; Disable Windows on main screen
+                       STA.W $212F                          ; Disable windows on sub screen
+                       LDA.B #$30
+                       STA.W $2130                          ; Set the subscreen transparent
+                       LDA.B #$00
+                       STA.W $2131                          ; No color math applied to any background
+                       LDA.B #$E0
+                       STA.W $2132                          ; Set all 3 color channels to 0 (black)
+                       LDA.B #$00
+                       STA.W $2133                          ; Disable special screen modes (interlacing, overscan,...)
+                       LDA.B #$FF
+                       STA.W $4201                          ; enables multitap (default startup config)
+                       LDA.B #$00
+                       STA.W $4202                          ; Zero out WRMPYA multiplication
+                       STA.W $4203
+                       STA.W $4204                          ; Zero out Division addresses
+                       STA.W $4205
+                       STA.W $4206
+                       STA.W $4207                          ; Zero out the H timer
+                       STA.W $4208
+                       STA.W $4209
+                       STA.W $420A
+                       STA.W $420B                          ; Disable all DMA transfers
+                       STA.W $420C                          ; Disable all HDMA transfers
+                       STA.W $420D                          ; Disable FastROM
+                       RTS
                                                             ;      |        |      ;  
                        db $A5,$40,$8D,$00,$21,$A5,$42,$8D   ;C082FD|        |000040;  
                        db $05,$21,$A5,$43,$8D,$06,$21,$A5   ;C08305|        |000021;  

@@ -16,6 +16,8 @@
     !APUIO2 = $2142
     !APUIO3 = $2143
 
+    !INIDISP = $2100
+
                                                             ;      |        |      ;  
                        incsrc "bank_C0.asm"                 ;      |        |      ;  
                        incsrc "bank_C1.asm"                 ;      |        |      ;  
