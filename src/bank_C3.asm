@@ -6040,10 +6040,12 @@
                        AND.W #$00FF                         ;C3A855|29FF00  |      ;  
                        CMP.W #$0004                         ;C3A858|C90400  |      ;  
                        BEQ CODE_C3A8B9                      ;C3A85B|F05C    |C3A8B9;  
-                                                            ;      |        |      ;  
-          CODE_C3A85D: LDX.W $1B00                          ;C3A85D|AE001B  |831B00;  
-                       LDA.W $0004,X                        ;C3A860|BD0400  |830004;  
-                       STA.W $0006,X                        ;C3A863|9D0600  |830006;  
+                                                            ;      |        |      ;
+
+    ;; CSS Menu Select NRML/AUTO type
+          CODE_C3A85D: LDX.W $1B00                          ;C3A85D|AE001B  |831B00; This function appears to handle checks for auto normal mode
+                       LDA.W $0004,X                        ;C3A860|BD0400  |830004; It compares input and swaps between 0 and 2 in byte 1b04
+                       STA.W $0006,X                        ;C3A863|9D0600  |830006; then the compare statement at C3A880 then jumps to a function that updates if so
                        STA.W $1B04                          ;C3A866|8D041B  |831B04;  
                        LDA.W #$0002                         ;C3A869|A90200  |      ;  
                        STA.W $1C1C                          ;C3A86C|8D1C1C  |831C1C;  

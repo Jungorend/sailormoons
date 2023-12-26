@@ -6339,12 +6339,12 @@
                        REP #$20                             ;C092AD|C220    |      ;  
                        SEP #$10                             ;C092AF|E210    |      ;  
                        LDY.B #$18                           ;C092B1|A018    |      ;  
-                       STY.W $4301                          ;C092B3|8C0143  |834301;  
-                       LDA.B $00                            ;C092B6|A500    |000000;  
-                       STA.W $2116                          ;C092B8|8D1621  |832116;  
-                       LDA.B $02                            ;C092BB|A502    |000002;  
-                       STA.W $4305                          ;C092BD|8D0543  |834305;  
-                       LDA.B $04                            ;C092C0|A504    |000004;  
+                       STY.W $4301                          ; #$2118 used for DMA (VRAM)
+                       LDA.B $00                            ; Starting location to copy to
+                       STA.W $2116                          ;
+                       LDA.B $02                            ; Copy $02 bytes in DMA transfer
+                       STA.W $4305                          ;
+                       LDA.B $04                            ; Copy $04 and $06 to the current address
                        STA.W $4302                          ;C092C2|8D0243  |834302;  
                        LDY.B $06                            ;C092C5|A406    |000006;  
                        STY.W $4304                          ;C092C7|8C0443  |834304;  

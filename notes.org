@@ -8,6 +8,8 @@
 - $5E-$5F: Current frame input player two
 - $60-$61: New button presses player one
 - $62-$63: New button presses player two
+  $8a -> this is the current screen
+  $8d -> the submenu (eg. $8a of 2 is CSS, 8D of 1 is vs, 2 vs cpu, 4 practice)
 
 ** Character Codes
 | Character | Value |
@@ -57,3 +59,13 @@
     83832E tiles load in this
     80A23B the start of the function where tiles load and then are corrected
     80A0DE top level, each time it runs we see a demo above and it reloads things
+
+    4280 contains the beginning of the copyright part of the tilemap on title screen
+    47a20 contains the top of chibi's head....so different places
+
+    2180 set for BBAD1
+    AT1 set to 808192
+    DMAP1 set to 8 (decrement A bus address after copy) WRAM copy
+    000808 is s-wram address
+    1FEC
+    8381D6
