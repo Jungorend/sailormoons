@@ -4228,8 +4228,13 @@
                        LDA.B $60                            ;C381CD|A560    |000060;  
                        ORA.B $62                            ;C381CF|0562    |000062;  
                        AND.W #$2000                         ;C381D1|290020  |      ;  
-                       BEQ CODE_C381EA                      ;C381D4|F014    |C381EA;  
-                       db $A9,$02,$00,$8D,$02,$1C,$E2,$20   ;C381D6|        |      ;  
+                       BEQ CODE_C381EA                      ;C381D4|F014    |C381EA;
+;;; This section here is if you press Select as player 1
+
+    ;; LDA #$0200
+    ;; STA $1C02
+    ;; SEP #$20
+                       db $A9,$02,$00,$8D,$02,$1C,$E2,$20   ;C381D6|        |      ;
                        db $A9,$F2,$22,$8C,$EB,$80,$E2,$20   ;C381DE|        |      ;  
                        db $A9,$C0,$85,$73                   ;C381E6|        |      ;  
                                                             ;      |        |      ;  
@@ -7094,13 +7099,36 @@
                        PLB                                  ;C3B823|AB      |      ;  
                        RTL                                  ;C3B824|6B      |      ;  
                                                             ;      |        |      ;  
-                                                            ;      |        |      ;  
-                       db $20,$00,$1E,$00,$1E,$00,$1E,$00   ;C3B825|        |C31E00;  
-                       db $20,$00,$20,$00,$20,$00,$20,$00   ;C3B82D|        |C32000;  
-                       db $20,$00,$20,$00,$D4,$79,$00,$00   ;C3B835|        |C32000;  
-                       db $BC,$6D,$C2,$70,$C8,$73,$CE,$76   ;C3B83D|        |00C26D;  
-                       db $00,$00,$00,$00,$00,$00,$D4,$79   ;C3B845|        |      ;  
-                       PHB                                  ;C3B84D|8B      |      ;  
+                                                            ;      |        |      ;
+
+    ;; Title Screen Setup ; C3B825
+    ;; This is what defines whose title screen is loaded.
+    ;; It is loaded in two segments
+    ;; The first entry is the default on start one, then when you beat a story mode character
+                       db $20, $00 ; Default (Chibi)
+                       db $1E, $00 ; Moon
+                       db $1E, $00 ; Mercury
+                       db $1E, $00 ; Mars
+                       db $20, $00 ; Jupiter
+                       db $20, $00 ; Venus
+                       db $20, $00 ; Uranus
+                       db $20, $00 ; Neptune
+                       db $20, $00 ; Pluto
+                       db $20, $00 ; Chibi
+                       ;; the second two values of the title screen load.
+                       db $D4, $79 ; Default
+                       db $00, $00 ; Moon
+                       db $BC, $6D ; Mercury
+                       db $C2, $70 ; Mars
+                       db $C8, $73 ; Jupiter
+                       db $CE, $76 ; Venus
+                       db $00, $00 ; Uranus
+                       db $00, $00 ; Neptune
+                       db $00, $00 ; Pluto
+                       db $D4, $79 ; Chibi
+
+
+                       PHB                                  ;C3B84D|8B      |      ;
                        PHK                                  ;C3B84E|4B      |      ;  
                        PLB                                  ;C3B84F|AB      |      ;  
                        REP #$30                             ;C3B850|C230    |      ;  

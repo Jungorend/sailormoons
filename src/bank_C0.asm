@@ -6175,75 +6175,82 @@
                        db $A9,$7E,$80,$02                   ;C09197|        |      ;  
                        LDA.B #$7F                           ;C0919B|A97F    |      ;  
                        STA.B $05                            ;C0919D|8505    |000005;  
+                                                            ;      |        |      ;
+
+    ;; This seems to copy graphics data to RAM (which is then loaded into VRAM)
+    ;; Expects SEP #30 it seems
+    ;; $00 is 3 bytes set to the address to load data in
+    ;; $03 is 2 bytes where we copy the data to
+    ;; $05 set to the DB register
+          CODE_C0919F: PHB                                  ; Store DBR
+                       LDA.B $05                            ; Load $05 into DBR
+                       PHA
+                       PLB
+                       REP #$30
+                       LDA.B [$00]                          ; Load a word by 24-bit pointer at $00
+                       INC.B $00                            ; Increment the pointer by a word
+                       INC.B $00
+                       STA.B $1A                            ; Store loaded word into $1A
+                       LDY.W #$0010                         ; Set Y to 16
+
+
+          CODE_C091B1: LSR.B $1A                            ; Divide word by 2 (round down)
+                       DEY                                  ; Y--
+                       BNE CODE_C091C1                      ; The below code runs after every 16 bytes copied
+                       LDA.B [$00]                          ; Load word from $00
+                       INC.B $00                            ; increment one word on $00
+                       INC.B $00
+                       STA.B $1A                            ; store loaded word into $1A
+                       LDY.W #$0010                         ; reset Y to 16
+
+          CODE_C091C1: BCC CODE_C091D1                      ; Jump to C091D1 if the division wasn't rounded down
+                       SEP #$20
+                       LDA.B [$00]                          ; Load 1 byte from $00
+                       STA.B ($03)                          ; Store into the 16-bit address at $03
+                       REP #$20
+                       INC.B $00                            ; Increment both source and destination pointers
+                       INC.B $03
+                       BRA CODE_C091B1                      ; Jump back to C091B1
                                                             ;      |        |      ;  
-          CODE_C0919F: PHB                                  ;C0919F|8B      |      ;  
-                       LDA.B $05                            ;C091A0|A505    |000005;  
-                       PHA                                  ;C091A2|48      |      ;  
-                       PLB                                  ;C091A3|AB      |      ;  
-                       REP #$30                             ;C091A4|C230    |      ;  
-                       LDA.B [$00]                          ;C091A6|A700    |000000;  
-                       INC.B $00                            ;C091A8|E600    |000000;  
-                       INC.B $00                            ;C091AA|E600    |000000;  
-                       STA.B $1A                            ;C091AC|851A    |00001A;  
-                       LDY.W #$0010                         ;C091AE|A01000  |      ;  
                                                             ;      |        |      ;  
-          CODE_C091B1: LSR.B $1A                            ;C091B1|461A    |00001A;  
-                       DEY                                  ;C091B3|88      |      ;  
-                       BNE CODE_C091C1                      ;C091B4|D00B    |C091C1;  
-                       LDA.B [$00]                          ;C091B6|A700    |000000;  
-                       INC.B $00                            ;C091B8|E600    |000000;  
-                       INC.B $00                            ;C091BA|E600    |000000;  
-                       STA.B $1A                            ;C091BC|851A    |00001A;  
-                       LDY.W #$0010                         ;C091BE|A01000  |      ;  
+          CODE_C091D1: STZ.B $16                            ; $16 = 0
+                       LSR.B $1A                            ; Divide $1A by 2
+                       DEY                                  ; Y--;
+                       BNE CODE_C091E3                      ; Skip the next if Y is 0
+                       LDA.B [$00]                          ; Load [$00] into $1A then increment to the next word
+                       INC.B $00                            ; Set Y to 16
+                       INC.B $00
+                       STA.B $1A
+                       LDY.W #$0010
+
+          CODE_C091E3: BCS CODE_C09218                      ; Jump if division was odd this time to C09218
+                       LSR.B $1A                            ; Divide $1A
+                       DEY                                  ; Decrement Y
+                       BNE CODE_C091F5                      ; Skip the next if Y is 0
+                       LDA.B [$00]
+                       INC.B $00                            ; Load [$00] into $1A, increment $00 by 2, Y = 16
+                       INC.B $00
+                       STA.B $1A
+                       LDY.W #$0010
+
+          CODE_C091F5: ROL.B $16                            ; $16 = ($16 * 2) + 1
+                       LSR.B $1A                            ; Divide $1A by 2
+                       DEY                                  ; Y--;
+                       BNE CODE_C09207                      ; Skip unless Y is 0
+                       LDA.B [$00]                          ; Load next word
+                       INC.B $00                            ; increment $0 by 2
+                       INC.B $00
+                       STA.B $1A                            ; Store this new value in $1A
+                       LDY.W #$0010                         ; Y = 16 again
                                                             ;      |        |      ;  
-          CODE_C091C1: BCC CODE_C091D1                      ;C091C1|900E    |C091D1;  
-                       SEP #$20                             ;C091C3|E220    |      ;  
-                       LDA.B [$00]                          ;C091C5|A700    |000000;  
-                       STA.B ($03)                          ;C091C7|9203    |000003;  
-                       REP #$20                             ;C091C9|C220    |      ;  
-                       INC.B $00                            ;C091CB|E600    |000000;  
-                       INC.B $03                            ;C091CD|E603    |000003;  
-                       BRA CODE_C091B1                      ;C091CF|80E0    |C091B1;  
-                                                            ;      |        |      ;  
-                                                            ;      |        |      ;  
-          CODE_C091D1: STZ.B $16                            ;C091D1|6416    |000016;  
-                       LSR.B $1A                            ;C091D3|461A    |00001A;  
-                       DEY                                  ;C091D5|88      |      ;  
-                       BNE CODE_C091E3                      ;C091D6|D00B    |C091E3;  
-                       LDA.B [$00]                          ;C091D8|A700    |000000;  
-                       INC.B $00                            ;C091DA|E600    |000000;  
-                       INC.B $00                            ;C091DC|E600    |000000;  
-                       STA.B $1A                            ;C091DE|851A    |00001A;  
-                       LDY.W #$0010                         ;C091E0|A01000  |      ;  
-                                                            ;      |        |      ;  
-          CODE_C091E3: BCS CODE_C09218                      ;C091E3|B033    |C09218;  
-                       LSR.B $1A                            ;C091E5|461A    |00001A;  
-                       DEY                                  ;C091E7|88      |      ;  
-                       BNE CODE_C091F5                      ;C091E8|D00B    |C091F5;  
-                       LDA.B [$00]                          ;C091EA|A700    |000000;  
-                       INC.B $00                            ;C091EC|E600    |000000;  
-                       INC.B $00                            ;C091EE|E600    |000000;  
-                       STA.B $1A                            ;C091F0|851A    |00001A;  
-                       LDY.W #$0010                         ;C091F2|A01000  |      ;  
-                                                            ;      |        |      ;  
-          CODE_C091F5: ROL.B $16                            ;C091F5|2616    |000016;  
-                       LSR.B $1A                            ;C091F7|461A    |00001A;  
-                       DEY                                  ;C091F9|88      |      ;  
-                       BNE CODE_C09207                      ;C091FA|D00B    |C09207;  
-                       LDA.B [$00]                          ;C091FC|A700    |000000;  
-                       INC.B $00                            ;C091FE|E600    |000000;  
-                       INC.B $00                            ;C09200|E600    |000000;  
-                       STA.B $1A                            ;C09202|851A    |00001A;  
-                       LDY.W #$0010                         ;C09204|A01000  |      ;  
-                                                            ;      |        |      ;  
-          CODE_C09207: ROL.B $16                            ;C09207|2616    |000016;  
-                       INC.B $16                            ;C09209|E616    |000016;  
-                       INC.B $16                            ;C0920B|E616    |000016;  
-                       LDA.B [$00]                          ;C0920D|A700    |000000;  
-                       ORA.W #$FF00                         ;C0920F|0900FF  |      ;  
-                       STA.B $14                            ;C09212|8514    |000014;  
-                       INC.B $00                            ;C09214|E600    |000000;  
-                       BRA CODE_C09240                      ;C09216|8028    |C09240;  
+          CODE_C09207: ROL.B $16                            ; $16 = ($16 * 2) + 1;
+                       INC.B $16                            ; Add 2 to $16
+                       INC.B $16                            ;
+                       LDA.B [$00]                          ; Store just the next byte of $0 in $14
+                       ORA.W #$FF00                         ; increment $0
+                       STA.B $14
+                       INC.B $00
+                       BRA CODE_C09240                      ; Jump to C09240
                                                             ;      |        |      ;  
                                                             ;      |        |      ;  
           CODE_C09218: LDA.B [$00]                          ;C09218|A700    |000000;  
