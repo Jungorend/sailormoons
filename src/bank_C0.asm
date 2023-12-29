@@ -6257,7 +6257,7 @@
                        ORA.W #$FF00                         ; increment $0
                        STA.B $14
                        INC.B $00
-                       BRA CODE_C09240                      ; Jump to C09240
+                       BRA .PREPARE_COPY                      ; Jump to C09240
                                                             ;      |        |      ;  
                                                             ;      |        |      ;
     ;; Popped bits are 0 then 1
@@ -6286,21 +6286,24 @@
                        INC A                                ;C0923D|1A      |      ;  
                        STA.B $16                            ;C0923E|8516    |000016;  
 
-          CODE_C09240: LDA.B $03                            ; Load destination address
+    ;; Sets up the copy in the next function
+    ;; $14 is used to move where to start copying bytes from
+    ;; $16 is the number of bytes to copy
+          .PREPARE_COPY: LDA.B $03                            ; Load destination address
                        CLC
                        ADC.B $14                            ; add $14 word to it
                        STA.B $06                            ; Store to $06 as new destination
                        PHY                                  ; tmp save value of current header
                        LDY.W #$0000                         ; Y = 0
-                       LDX.B $16                            ; Load $16
+                       LDX.B $16                            ; Load $16 into Y as iteration count
                        STY.B $16                            ; Set $16 to 0
                        SEP #$20
 
-          CODE_C09251: LDA.B ($06),Y                        ; Read in new source+index byte
+          .COPY_LOOP: LDA.B ($06),Y                        ; Read in new source+index byte
                        STA.B ($03),Y                        ; Store to destination+index byte
                        INY
                        DEX                                  ; inc index
-                       BNE CODE_C09251                      ; jump back to C09251 X times
+                       BNE .COPY_LOOP                      ; jump back to C09251 X times
                        REP #$20
                        TYA                                  ; A is now the number of iterations just performed
                        CLC
@@ -6324,7 +6327,7 @@
 
           .CODE_C09276: INC A
                        STA.B $16
-                       BRA CODE_C09240
+                       BRA .PREPARE_COPY
 
                                                     
           .FINISH_GRAPHICS_DECOMPRESSION: PLB                                  ;C0927B|AB      |      ;
