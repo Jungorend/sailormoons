@@ -5735,7 +5735,7 @@
                                                             ;      |        |      ;  
                                                             ;      |        |      ;  
           CODE_C08DF9: SEP #$30                             ;C08DF9|E230    |      ;  
-                       JSR.W CODE_C0919F                    ;C08DFB|209F91  |C0919F;  
+                       JSR.W DECOMPRESS_GRAPHICS_INIT                    ;C08DFB|209F91  |C0919F;
                        PLB                                  ;C08DFE|AB      |      ;  
                        RTL                                  ;C08DFF|6B      |      ;  
                                                             ;      |        |      ;  
@@ -6165,7 +6165,7 @@
                        SEP #$20                             ;C09184|E220    |      ;  
                        STZ.B $03                            ;C09186|6403    |000003;  
                        STZ.B $34                            ;C09188|6434    |000034;  
-                       JSR.W CODE_C0919F                    ;C0918A|209F91  |C0919F;  
+                       JSR.W DECOMPRESS_GRAPHICS_INIT                    ;C0918A|209F91  |C0919F;
                        SEC                                  ;C0918D|38      |      ;  
                        LDA.B $03                            ;C0918E|A503    |000003;  
                        SBC.B $34                            ;C09190|E534    |000034;  
@@ -6179,10 +6179,15 @@
 
     ;; This seems to copy graphics data to RAM (which is then loaded into VRAM)
     ;; Expects SEP #30 it seems
-    ;; $00 is 3 bytes set to the address to load data in
-    ;; $03 is 2 bytes where we copy the data to
-    ;; $05 set to the DB register
-          CODE_C0919F: PHB                                  ; Store DBR
+    ;; $00: 3 bits = source
+    ;; $03: 2 bits = destination
+    ;; $05: 1 bits = DBR
+    ;;
+    ;; Used by function:
+    ;; When copying, $16 is the number of bytes to copy.
+    ;; Whenever a function pulls a value from source it increments it by that amount.
+    ;; Likewise for destination with pushing values
+          DECOMPRESS_GRAPHICS_INIT: PHB                                  ; Store DBR
                        LDA.B $05                            ; Load $05 into DBR
                        PHA
                        PLB
@@ -6190,29 +6195,31 @@
                        LDA.B [$00]                          ; Load a word by 24-bit pointer at $00
                        INC.B $00                            ; Increment the pointer by a word
                        INC.B $00
-                       STA.B $1A                            ; Store loaded word into $1A
+                       STA.B $1A                            ; Store loaded word into $1A and $1B
                        LDY.W #$0010                         ; Set Y to 16
 
 
           CODE_C091B1: LSR.B $1A                            ; Divide word by 2 (round down)
                        DEY                                  ; Y--
-                       BNE CODE_C091C1                      ; The below code runs after every 16 bytes copied
+                       BNE .COPY_BYTE_UNCHANGED                      ; The below code runs after every 16 bytes copied
                        LDA.B [$00]                          ; Load word from $00
                        INC.B $00                            ; increment one word on $00
                        INC.B $00
                        STA.B $1A                            ; store loaded word into $1A
                        LDY.W #$0010                         ; reset Y to 16
 
-          CODE_C091C1: BCC CODE_C091D1                      ; Jump to C091D1 if the division wasn't rounded down
+    ;; If the popped bit of $1A was 1, copy 1 byte over to destination,
+    ;; then return to C091B1
+          .COPY_BYTE_UNCHANGED: BCC CODE_C091D1
                        SEP #$20
-                       LDA.B [$00]                          ; Load 1 byte from $00
-                       STA.B ($03)                          ; Store into the 16-bit address at $03
+                       LDA.B [$00]
+                       STA.B ($03)
                        REP #$20
-                       INC.B $00                            ; Increment both source and destination pointers
+                       INC.B $00
                        INC.B $03
-                       BRA CODE_C091B1                      ; Jump back to C091B1
-                                                            ;      |        |      ;  
-                                                            ;      |        |      ;  
+                       BRA CODE_C091B1
+
+    ;; When popped bit is 0
           CODE_C091D1: STZ.B $16                            ; $16 = 0
                        LSR.B $1A                            ; Divide $1A by 2
                        DEY                                  ; Y--;
@@ -6252,76 +6259,82 @@
                        INC.B $00
                        BRA CODE_C09240                      ; Jump to C09240
                                                             ;      |        |      ;  
-                                                            ;      |        |      ;  
-          CODE_C09218: LDA.B [$00]                          ;C09218|A700    |000000;  
-                       INC.B $00                            ;C0921A|E600    |000000;  
-                       INC.B $00                            ;C0921C|E600    |000000;  
-                       STA.B $10                            ;C0921E|8510    |000010;  
-                       XBA                                  ;C09220|EB      |      ;  
-                       STA.B $12                            ;C09221|8512    |000012;  
-                       ORA.W #$FF00                         ;C09223|0900FF  |      ;  
-                       ASL A                                ;C09226|0A      |      ;  
-                       ASL A                                ;C09227|0A      |      ;  
-                       ASL A                                ;C09228|0A      |      ;  
-                       ASL A                                ;C09229|0A      |      ;  
-                       ASL A                                ;C0922A|0A      |      ;  
-                       STA.B $14                            ;C0922B|8514    |000014;  
-                       SEP #$20                             ;C0922D|E220    |      ;  
-                       LDA.B $10                            ;C0922F|A510    |000010;  
-                       STA.B $14                            ;C09231|8514    |000014;  
-                       REP #$20                             ;C09233|C220    |      ;  
-                       LDA.B $12                            ;C09235|A512    |000012;  
-                       AND.W #$0007                         ;C09237|290700  |      ;  
+                                                            ;      |        |      ;
+    ;; Popped bits are 0 then 1
+    ;; Here is the crazy part
+          CODE_C09218: LDA.B [$00]                          ; Pull word from source
+                       INC.B $00
+                       INC.B $00
+                       STA.B $10                            ; Store word into $10
+                       XBA                                  ; Flip lower and upper byte of word
+                       STA.B $12                            ; Store so $10-$14 is now o1 o2 o2 o1
+                       ORA.W #$FF00                         ; $FF in upper byte
+                       ASL A
+                       ASL A
+                       ASL A                                ; Pop off upper 5 bits
+                       ASL A
+                       ASL A                                ; Will be 3 1s on the right, plus 8 bits of o1 then 5 0's
+                       STA.B $14                            ; Store into $14
+                       SEP #$20
+                       LDA.B $10                            ; Load o1 into A
+                       STA.B $14                            ; Store into lower bytes of $14's word
+                       REP #$20
+                       LDA.B $12                            ; Loading into A o2 o1
+                       AND.W #$0007                         ; Ignore all but $000 1101b
                        BEQ CODE_C09265                      ;C0923A|F029    |C09265;  
                        INC A                                ;C0923C|1A      |      ;  
                        INC A                                ;C0923D|1A      |      ;  
                        STA.B $16                            ;C0923E|8516    |000016;  
-                                                            ;      |        |      ;  
-          CODE_C09240: LDA.B $03                            ;C09240|A503    |000003;  
-                       CLC                                  ;C09242|18      |      ;  
-                       ADC.B $14                            ;C09243|6514    |000014;  
-                       STA.B $06                            ;C09245|8506    |000006;  
-                       PHY                                  ;C09247|5A      |      ;  
-                       LDY.W #$0000                         ;C09248|A00000  |      ;  
-                       LDX.B $16                            ;C0924B|A616    |000016;  
-                       STY.B $16                            ;C0924D|8416    |000016;  
-                       SEP #$20                             ;C0924F|E220    |      ;  
-                                                            ;      |        |      ;  
-          CODE_C09251: LDA.B ($06),Y                        ;C09251|B106    |000006;  
-                       STA.B ($03),Y                        ;C09253|9103    |000003;  
-                       INY                                  ;C09255|C8      |      ;  
-                       DEX                                  ;C09256|CA      |      ;  
-                       BNE CODE_C09251                      ;C09257|D0F8    |C09251;  
-                       REP #$20                             ;C09259|C220    |      ;  
-                       TYA                                  ;C0925B|98      |      ;  
-                       CLC                                  ;C0925C|18      |      ;  
-                       ADC.B $03                            ;C0925D|6503    |000003;  
-                       STA.B $03                            ;C0925F|8503    |000003;  
-                       PLY                                  ;C09261|7A      |      ;  
-                       JMP.W CODE_C091B1                    ;C09262|4CB191  |C091B1;  
-                                                            ;      |        |      ;  
-                                                            ;      |        |      ;  
-          CODE_C09265: LDA.B [$00]                          ;C09265|A700    |000000;  
-                       INC.B $00                            ;C09267|E600    |000000;  
-                       AND.W #$00FF                         ;C09269|29FF00  |      ;  
-                       BEQ CODE_C0927B                      ;C0926C|F00D    |C0927B;  
-                       CMP.W #$0001                         ;C0926E|C90100  |      ;  
-                       BNE CODE_C09276                      ;C09271|D003    |C09276;  
-                       db $4C,$B1,$91                       ;C09273|        |C091B1;  
-                                                            ;      |        |      ;  
-          CODE_C09276: INC A                                ;C09276|1A      |      ;  
-                       STA.B $16                            ;C09277|8516    |000016;  
-                       BRA CODE_C09240                      ;C09279|80C5    |C09240;  
-                                                            ;      |        |      ;  
-                                                            ;      |        |      ;  
-          CODE_C0927B: PLB                                  ;C0927B|AB      |      ;  
+
+          CODE_C09240: LDA.B $03                            ; Load destination address
+                       CLC
+                       ADC.B $14                            ; add $14 word to it
+                       STA.B $06                            ; Store to $06 as new destination
+                       PHY                                  ; tmp save value of current header
+                       LDY.W #$0000                         ; Y = 0
+                       LDX.B $16                            ; Load $16
+                       STY.B $16                            ; Set $16 to 0
+                       SEP #$20
+
+          CODE_C09251: LDA.B ($06),Y                        ; Read in new source+index byte
+                       STA.B ($03),Y                        ; Store to destination+index byte
+                       INY
+                       DEX                                  ; inc index
+                       BNE CODE_C09251                      ; jump back to C09251 X times
+                       REP #$20
+                       TYA                                  ; A is now the number of iterations just performed
+                       CLC
+                       ADC.B $03                            ; Update destination pointer to beyond copied bytes
+                       STA.B $03
+                       PLY                                  ; Restore prior header value to Y
+                       JMP.W CODE_C091B1                    ; Return to base header reader loop
+
+
+    ;; These next two functions load a byte (iteration_count)
+    ;; If 0, it's the end of the graphics decompression
+    ;; If it's 1, jump back to header loop (don't think this is meant to happen)
+    ;; Otherwise, jumps to C09240 with (iteration_count + 1) iterations stored to $16
+          CODE_C09265: LDA.B [$00]
+                       INC.B $00
+                       AND.W #$00FF
+                       BEQ .FINISH_GRAPHICS_DECOMPRESSION
+                       CMP.W #$0001
+                       BNE .CODE_C09276
+                       JMP.W CODE_C091B1
+
+          .CODE_C09276: INC A
+                       STA.B $16
+                       BRA CODE_C09240
+
+                                                    
+          .FINISH_GRAPHICS_DECOMPRESSION: PLB                                  ;C0927B|AB      |      ;
                        RTS                                  ;C0927C|60      |      ;  
                                                             ;      |        |      ;  
                        PHP                                  ;C0927D|08      |      ;  
                        PHB                                  ;C0927E|8B      |      ;  
                        PHK                                  ;C0927F|4B      |      ;  
                        PLB                                  ;C09280|AB      |      ;  
-                       JSR.W CODE_C0919F                    ;C09281|209F91  |C0919F;  
+                       JSR.W DECOMPRESS_GRAPHICS_INIT                    ;C09281|209F91  |C0919F;
                        PLB                                  ;C09284|AB      |      ;  
                        PLP                                  ;C09285|28      |      ;  
                        RTL                                  ;C09286|6B      |      ;  

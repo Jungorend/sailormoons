@@ -10,6 +10,7 @@
 - $62-$63: New button presses player two
   $8a -> this is the current screen
   $8d -> the submenu (eg. $8a of 2 is CSS, 8D of 1 is vs, 2 vs cpu, 4 practice)
+  $7e2000 -> the beginning of RAM and also where CHR data seems to be copied
 
 ** Character Codes
 | Character | Value |
@@ -69,3 +70,20 @@
     000808 is s-wram address
     1FEC
     8381D6
+
+    source address: c36d30
+    destination 7e2000
+    A 7E
+    X BEDA
+    Y starting value doesn't matter
+
+    1A is 2 bytes first time
+    Each segment is 16 bytes.
+    There is a 2 byte header, where each bit in theory can represent a byte. Bits are popped off one at a time. If it's 1, copy the byte directly.
+
+    If it's 0, then it's describing a more complex pattern.
+    0-1 appears to be a mass copy.
+
+ff ff
+
+$16 seems to be the total number of bytes to copy in the mass copy
