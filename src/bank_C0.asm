@@ -6186,8 +6186,9 @@
     ;; Used by function:
     ;; When copying, $16 is the number of bytes to copy.
     ;; Whenever a function pulls a value from source it increments it by that amount.
+    ;; $14 is the byte indicating where to copy from. It moves that many spaces from the current destination byte (eg $FF is -1)
     ;; Likewise for destination with pushing values
-          DECOMPRESS_GRAPHICS_INIT: PHB                                  ; Store DBR
+          DECOMPRESS_GRAPHICS_INIT: PHB                     ; Store DBR
                        LDA.B $05                            ; Load $05 into DBR
                        PHA
                        PLB
@@ -6199,7 +6200,7 @@
                        LDY.W #$0010                         ; Set Y to 16
 
 
-          CODE_C091B1: LSR.B $1A                            ; Divide word by 2 (round down)
+          .BASE_LOOP: LSR.B $1A                            ; Divide word by 2 (round down)
                        DEY                                  ; Y--
                        BNE .COPY_BYTE_UNCHANGED                      ; The below code runs after every 16 bytes copied
                        LDA.B [$00]                          ; Load word from $00
@@ -6210,47 +6211,49 @@
 
     ;; If the popped bit of $1A was 1, copy 1 byte over to destination,
     ;; then return to C091B1
-          .COPY_BYTE_UNCHANGED: BCC CODE_C091D1
+          .COPY_BYTE_UNCHANGED: BCC .WHEN_HEADER_POPS_ZERO
                        SEP #$20
                        LDA.B [$00]
                        STA.B ($03)
                        REP #$20
                        INC.B $00
                        INC.B $03
-                       BRA CODE_C091B1
+                       BRA .BASE_LOOP
 
     ;; When popped bit is 0
-          CODE_C091D1: STZ.B $16                            ; $16 = 0
+          .WHEN_HEADER_POPS_ZERO: STZ.B $16                            ; $16 = 0
                        LSR.B $1A                            ; Divide $1A by 2
                        DEY                                  ; Y--;
-                       BNE CODE_C091E3                      ; Skip the next if Y is 0
+                       BNE .CHECK_FOR_SECOND_BIT                      ; Skip the next if Y is 0
                        LDA.B [$00]                          ; Load [$00] into $1A then increment to the next word
                        INC.B $00                            ; Set Y to 16
                        INC.B $00
                        STA.B $1A
                        LDY.W #$0010
 
-          CODE_C091E3: BCS CODE_C09218                      ; Jump if division was odd this time to C09218
+          .CHECK_FOR_SECOND_BIT: BCS .MASS_COPY                      ; Jump if division was odd this time to C09218
                        LSR.B $1A                            ; Divide $1A
                        DEY                                  ; Decrement Y
-                       BNE CODE_C091F5                      ; Skip the next if Y is 0
+                       BNE .SMALL_COPY                      ; Skip the next if Y is 0
                        LDA.B [$00]
                        INC.B $00                            ; Load [$00] into $1A, increment $00 by 2, Y = 16
                        INC.B $00
                        STA.B $1A
                        LDY.W #$0010
 
-          CODE_C091F5: ROL.B $16                            ; $16 = ($16 * 2) + 1
-                       LSR.B $1A                            ; Divide $1A by 2
+    ;; Popped bits are 0, then 0, then X.
+          .SMALL_COPY: ROL.B $16                            ; $16 now is 0000 0000X
+                       LSR.B $1A                            ;
                        DEY                                  ; Y--;
-                       BNE CODE_C09207                      ; Skip unless Y is 0
+                       BNE .SMALL_COPY_PART_TWO                      ; Skip unless Y is 0
                        LDA.B [$00]                          ; Load next word
                        INC.B $00                            ; increment $0 by 2
                        INC.B $00
                        STA.B $1A                            ; Store this new value in $1A
                        LDY.W #$0010                         ; Y = 16 again
-                                                            ;      |        |      ;  
-          CODE_C09207: ROL.B $16                            ; $16 = ($16 * 2) + 1;
+                                                            ;      |        |      ;
+    ;; Pops another bit, for 0,0,X,Y.
+          .SMALL_COPY_PART_TWO: ROL.B $16                            ; $16 = 0000 00XY
                        INC.B $16                            ; Add 2 to $16
                        INC.B $16                            ;
                        LDA.B [$00]                          ; Store just the next byte of $0 in $14
@@ -6262,7 +6265,7 @@
                                                             ;      |        |      ;
     ;; Popped bits are 0 then 1
     ;; Here is the crazy part
-          CODE_C09218: LDA.B [$00]                          ; Pull word from source
+          .MASS_COPY: LDA.B [$00]                          ; Pull word from source
                        INC.B $00
                        INC.B $00
                        STA.B $10                            ; Store word into $10
@@ -6281,7 +6284,7 @@
                        REP #$20
                        LDA.B $12                            ; Loading into A o2 o1
                        AND.W #$0007                         ; Ignore all but $000 1101b
-                       BEQ CODE_C09265                      ;C0923A|F029    |C09265;  
+                       BEQ .LOAD_ITERATION_BYTE                      ;C0923A|F029    |C09265;
                        INC A                                ;C0923C|1A      |      ;  
                        INC A                                ;C0923D|1A      |      ;  
                        STA.B $16                            ;C0923E|8516    |000016;  
@@ -6310,22 +6313,22 @@
                        ADC.B $03                            ; Update destination pointer to beyond copied bytes
                        STA.B $03
                        PLY                                  ; Restore prior header value to Y
-                       JMP.W CODE_C091B1                    ; Return to base header reader loop
+                       JMP.W .BASE_LOOP                    ; Return to base header reader loop
 
 
     ;; These next two functions load a byte (iteration_count)
     ;; If 0, it's the end of the graphics decompression
     ;; If it's 1, jump back to header loop (don't think this is meant to happen)
     ;; Otherwise, jumps to C09240 with (iteration_count + 1) iterations stored to $16
-          CODE_C09265: LDA.B [$00]
+          .LOAD_ITERATION_BYTE: LDA.B [$00]
                        INC.B $00
                        AND.W #$00FF
                        BEQ .FINISH_GRAPHICS_DECOMPRESSION
                        CMP.W #$0001
-                       BNE .CODE_C09276
-                       JMP.W CODE_C091B1
+                       BNE .SET_ITERATION_COUNT
+                       JMP.W .BASE_LOOP
 
-          .CODE_C09276: INC A
+          .SET_ITERATION_COUNT: INC A
                        STA.B $16
                        BRA .PREPARE_COPY
 

@@ -84,6 +84,25 @@
     If it's 0, then it's describing a more complex pattern.
     0-1 appears to be a mass copy.
 
-ff ff
+    ** Loads a word, HHLL. If the first 3 bits of HH are 0, it jumps to CODE_C09265. Otherwise the iteration count is 2+first 3 bits of HH.
+    The top 5 bits are used to give a vector of where to pull from (current destination + vector, most commonly #$FF (-1)). LL is used for the low byte of the vector.
 
-$16 seems to be the total number of bytes to copy in the mass copy
+    With CODE_C09265, it reads in a byte. If that byte is 0, we're done.
+    If it's 1, go back to loop. Not encountered in testing. Othrewise, 1+byte is the iteration count.
+
+    When copying, 3 bytes are used:
+    Direction byte:
+    | 7 6 5 4 3 | 2 1 0 |
+    | DIRECTION | ITER  |
+        ITER:
+        0 -> loads the next byte. If 1, we're done the loop. Otherwise, (byte+1) is the number of times we copy bytes over
+        1+ -> 2 + ITER bytes are copied
+        DIRECTION:
+        These are used for the higher bits of the vector to adjust where we start copying from. This is relative to the destination, so $FFFF will start copying from the prior byte.
+    Lower Direction byte:
+    | 7 6 5 4 3 2 1 0 |
+    | Lower Direction |
+        Lower Direction:
+        Combined with DIRECTION bits and some set 1s to form the vector:
+        | 1 1 1 D D D D D | L L L L L L L L |
+        This is added to the destination address in $03 to form the location to start copying bytes from. Each byte it pulls from the next one over.
