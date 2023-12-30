@@ -6258,7 +6258,7 @@
                        INC.B $16                            ;
                        LDA.B [$00]                          ; Store just the next byte of $0 in $14
                        ORA.W #$FF00                         ; increment $0
-                       STA.B $14
+                       STA.B $14                            ; Always $FF in the upper byte, then the byte loaded for lower.
                        INC.B $00
                        BRA .PREPARE_COPY                      ; Jump to C09240
                                                             ;      |        |      ;  
