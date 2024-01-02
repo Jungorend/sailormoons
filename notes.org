@@ -106,3 +106,5 @@
         Combined with DIRECTION bits and some set 1s to form the vector:
         | 1 1 1 D D D D D | L L L L L L L L |
         This is added to the destination address in $03 to form the location to start copying bytes from. Each byte it pulls from the next one over.
+
+        Neptune's hand background chunk is at the 40000 point in the rom.
