@@ -64,8 +64,13 @@
         (push-bit-to-header (ldb (byte 1 1) iter))
         (push-bit-to-header (ldb (byte 1 0) iter))
         (vector-push-extend source *compressed-stream*))
-      ;TODO: write bulk copy
-      nil))
+      (let ((iter (- iteration-count 1))
+            (source (dpb 0 (byte 3 0)
+                         (dpb 7 (byte 3 13) (+ #x10000 start-vector)))))
+        (push-bit-to-header 0)
+        (push-bit-to-header 1)
+        (store-word source *compressed-stream*)
+        (vector-push-extend iter *compressed-stream*))))
 
 (defun push-end-to-stream ()
   (push-bit-to-header 0)
@@ -74,6 +79,8 @@
   (replace-word (bits *current-header*) *compressed-stream* (stream-position *current-header*)))
 
 ; Test
+; Big concern is I think my iteration bytes + count is off by one potentially
+; need to check, and if the iter_bytes is wrong adjust in copy-bytes-to-stream
 (close *file-stream*)
 (setf *file-stream (open "test.decompressed" :element-type octet))
 (make-compressed-stream)

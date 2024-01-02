@@ -95,8 +95,14 @@
     | 7 6 5 4 3 | 2 1 0 |
     | DIRECTION | ITER  |
         ITER:
-        0 -> loads the next byte. If 1, we're done the loop. Otherwise, (byte+1) is the number of times we copy bytes over
-        1+ -> 2 + ITER bytes are copied
+        If iter is 1+, we iterate this +2 many with the smaller copy procedure.
+        If iter is 0, Load the next byte, ITER_BYTE
+        When the ITER_BYTE is 0:
+            End the graphics compression
+        When the ITER_BYTE is 1:
+            Proceed to the top of the header (this probably should never happen)
+        Greater than 1:
+            ITER_BYTE+1 bytes are copied
         DIRECTION:
         These are used for the higher bits of the vector to adjust where we start copying from. This is relative to the destination, so $FFFF will start copying from the prior byte.
     Lower Direction byte:
