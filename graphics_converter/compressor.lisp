@@ -12,8 +12,7 @@
 
 (defparameter *current-header* nil)
 (defparameter *compressed-stream* nil)
-(defparameter *file-stream* (open "test.decompressed"
-                                  :element-type 'octet))
+(defparameter *file-stream* nil)
 
 (defun make-compressed-stream ()
   (setf *current-header* (make-instance 'graphics-header :word #x0000)
@@ -77,6 +76,44 @@
   (push-bit-to-header 1)
   (store-word 0 *compressed-stream*)
   (replace-word (bits *current-header*) *compressed-stream* (stream-position *current-header*)))
+
+(defun take (n list &optional (result '()))
+  (if (= n 0)
+      (reverse result)
+      (take (- n 1) (rest list) (cons (first list) result))))
+
+(defun drop (n list)
+  (if (= n 0)
+      list
+      (drop (- n 1) (rest list))))
+
+(defun repeat-count (repeat-bytes tile &optional (result -1))
+  "Returns an integer for the number of times it repeats."
+  (if (equal repeat-bytes (take (length repeat-bytes) tile))
+      (repeat-count repeat-bytes (drop (length repeat-bytes) tile) (+ result 1))
+      result))
+
+(defun look-for-copies (current-tile)
+  "Returns a list of (width count) of the width with the most copies."
+  (reduce (lambda (current-max new-value)
+            (if (>= (second new-value) (second current-max))
+                new-value
+                current-max))
+          (loop for i from 1 to 4
+                for bytes = (take i current-tile)
+                collect (list i (repeat-count bytes current-tile)))
+          :initial-value '(0 0)))
+
+(defun calculate-next-action (current-tile)
+  (let ((best-copy (look-for-copies current-tile)))
+    (if (> (+ (first best-copy) (second best-copy)) 2)
+        (progn
+          (dotimes (iter (first best-copy)) (push-byte-to-stream (nth iter current-tile)))
+          (copy-bytes-to-stream (- (first best-copy)) (second best-copy))
+          (drop (* (first best-copy) (+ 1 (second best-copy))) current-tile))
+        (progn
+          (push-byte-to-stream (first current-tile))
+          (rest current-tile)))))
 
 ; Test
 ; Big concern is I think my iteration bytes + count is off by one potentially
