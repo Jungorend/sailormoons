@@ -55,6 +55,18 @@
   (push-bit-to-header 1)
   (vector-push-extend byte *compressed-stream*))
 
+(defun copy-bytes-to-stream (start-vector iteration-count)
+  (if (< iteration-count 6)
+      (let ((iter (- iteration-count 2))
+            (source (ldb (byte 8 0)(+ #x100 start-vector))))
+        (push-bit-to-header 0)
+        (push-bit-to-header 0)
+        (push-bit-to-header (ldb (byte 1 1) iter))
+        (push-bit-to-header (ldb (byte 1 0) iter))
+        (vector-push-extend source *compressed-stream*))
+      ;TODO: write bulk copy
+      nil))
+
 (defun push-end-to-stream ()
   (push-bit-to-header 0)
   (push-bit-to-header 1)
