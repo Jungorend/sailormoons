@@ -10,6 +10,7 @@
    (stream-position :accessor stream-position :initform 0)
    (index :accessor index :initform 0)))
 
+(defparameter *decompressed-stream* nil)
 (defparameter *current-header* nil)
 (defparameter *compressed-stream* nil)
 (defparameter *file-stream* nil)
@@ -91,7 +92,7 @@
   "Returns an integer for the number of times it repeats."
   (if (equal repeat-bytes (take (length repeat-bytes) tile))
       (repeat-count repeat-bytes (drop (length repeat-bytes) tile) (+ result 1))
-      result))
+      (min result 255)))
 
 (defun look-for-copies (current-tile)
   "Returns a list of (width count) of the width with the most copies."
@@ -106,18 +107,53 @@
 
 (defun calculate-next-action (current-tile)
   (let ((best-copy (look-for-copies current-tile)))
-    (if (> (+ (first best-copy) (second best-copy)) 2)
-        (progn
-          (dotimes (iter (first best-copy)) (push-byte-to-stream (nth iter current-tile)))
-          (copy-bytes-to-stream (- (first best-copy)) (second best-copy))
-          (drop (* (first best-copy) (+ 1 (second best-copy))) current-tile))
-        (progn
-          (push-byte-to-stream (first current-tile))
-          (rest current-tile)))))
+    (cond ((> (second best-copy) 2)
+          (progn
+            (dotimes (iter (first best-copy)) (push-byte-to-stream (nth iter current-tile)))
+            (copy-bytes-to-stream (- (first best-copy)) (second best-copy))
+            (drop (* (first best-copy) (+ 1 (second best-copy))) current-tile)))
+
+      ((not (null current-tile))
+      (progn
+        (push-byte-to-stream (first current-tile))
+        (rest current-tile)))
+
+      ('otherwise
+       (progn
+         (push-end-to-stream)
+         nil)))))
+
+(defun main-loop (graphics-data)
+  (let ((remaining-data (calculate-next-action graphics-data)))
+    (when remaining-data
+        (main-loop remaining-data))))
+
+(defun compress-file (filename destination-filename)
+  (let ((decompressed-stream (with-open-file (in filename
+                                                 :element-type '(unsigned-byte 8))
+                               (loop for byte = (read-byte in nil)
+                                     while byte
+                                     collect byte))))
+        (make-compressed-stream)
+        (main-loop decompressed-stream)
+        (with-open-file (output destination-filename
+                                :direction :output
+                                :element-type '(unsigned-byte 8)
+                                :if-exists :overwrite
+                                :if-does-not-exist :create)
+          (loop for i from 0 to (length *compressed-stream*)
+                do (write-byte i output)))))
 
 ; Test
 ; Big concern is I think my iteration bytes + count is off by one potentially
 ; need to check, and if the iter_bytes is wrong adjust in copy-bytes-to-stream
 (close *file-stream*)
-(setf *file-stream (open "test.decompressed" :element-type octet))
+(setf *file-stream* (open "test.dc" :element-type 'octet))
 (make-compressed-stream)
+
+(setf *decompressed-stream*
+    (loop for byte = (read-byte *file-stream* nil)
+        while byte
+        collect byte))
+
+(compress-file "test.dc" "recompressed")
