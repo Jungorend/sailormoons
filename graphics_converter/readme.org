@@ -1,0 +1,105 @@
+* fun things
+Guh huh jupiter saying it is as easy as 1,2,3,4...217...
+
+why lisp?
+
+I test in production
+
+this step reminds me of my senpai who spurned me back on page 3
+
+* Prerequisites
+I am going to list here a few tools. You can use your own if you have a preference, but my instructions will be under the assumption you're using what I listed below, so you may need to substitute for the equivalent in whatever you use.
+There are a few tools that are necessary to edit SNES ROMs.
+- An emulator, preferably with debugging options. My choice is bsnes-plus, a fork of bsnes with a lot of tools that make it much better for modding
+- A SNES graphics editing program. SNES graphics information is stored in a special compact form so it can fit on the SNES' hardware. Normal image editing programs cannot read SNES graphics data. I recommend YY-CHR. It has the benefit of not expecting the whole ROM, which is necessary for our uses. It is also easy to use.
+- A hex editor. I use HxD. I am sure other options are just as good. This was just the first one I grabbed for this project.
+- SBCL. This is the implementation of common lisp I used to write the graphics decoders. If this is a pain lemme know I can probably just send you an executable of the decoders to run instead.
+
+* Some Caveats
+These tools are pretty experimental right now. I'm not gonna tell you to backup your ROMs before making changes after this caveat but just be aware even if you do everything right there's the possibility of causing damage so....make copies regularly. You might not notice an issue till a few changes later if you move fast.
+
+Likewise, the program I used takes a pretty naive approach to compression. Assuming the resulting file is smaller than the original, this'll be no problem. But if the results are bigger, it has the possibility to overwrite something important. So if this doesn't work, sorry. But let me know and I may be able to improve it.
+
+Likewise, this process is not friendly yet. If it turns out people are actually making graphics mods, I will revisit this and make the process easier, but I kinda suspect most people aren't even going to read this, so I it's not a priority right now.
+
+* What this tool can be used for
+The SNES uses two kinds of graphics to draw to the screen. Backgrounds, and sprites. Sprites are objects that are moved around, whereas backgrounds tend to be static. This is not a hard and fast rule, you will sometimes see sprites used for background since there are limits on how many of each can be loaded in memory at a time.
+
+Types of Graphics in Sailor Moon S:
+1. Most of the sprites are small and unique, and therefore not compressed at all. These ones can be found without requiring any special tools. You can load up the ROM with a SNES graphics editing program and these will be found just by scrolling through the ROM. For these you can just edit them directly without any further work. This is mostly the sprites of the characters for fighting, and their fireballs.
+
+2. The title screen and level select screen are pulled in from Sailor Moon Fighter S by Metaquarius. This gives us the English level names and some other features, however it uses the compression from this game instead. I do not know how these are compressed, so if you need to edit anything from these pages, Metaquarius is who to talk to. All of these fall into element 3 if editing the non Big Zam Edition ROM instead.
+
+3. Lastly we have a few compressed sprites and all the backgrounds. If you want to edit any compressed graphics, this is where this guide comes in.
+
+* What is to be Done
+In order to edit the graphics you want, you first need to extract them. There is not yet a documented table of lookups for where each graphic is located. Instead, you will first need to locate what you need.
+
+** Locating the graphics you want
+The original decompression starts at the instruction at 80919F. Load up bsnes, and in the tools, open the debugger. Don't panic, we won't be using this, but we will be using tools only accessed in the debugger. In the tools menu of the debugger, select both the Memory Editor, and the Breakpoint editor.
+
+In the Memory Editor, just hit the checkbox next to Auto Update. This will ensure it's always the most recent information.
+
+You'll want to play the game to just prior to where it loads what you want. The loads are the sections where the screen goes black for a bit. For example, if you want to change something on the character select screen, go to the title screen. If you want to change a specific stage, go to the level select screen.
+
+In the breakpoint editor, type in the following address: 80919F
+This is the start of the decompression routine. All compressed functions pass through this point. Ensure that the "x" is checked in the breakpoint editor.
+
+Then go ahead and proceed to the level you wanted to load. The game should freeze--this means it hit the breakpoint we set earlier. Open up your memory editor and make a note of the very first 3 bytes (Each byte will be two digits and/or letters).
+
+Write this down somewhere, but with the bytes in reverse order. For example, if you saw 73 ad c3, write down c3ad73.
+
+Hit the run button on the debugger. If it freezes again, continue the process of writing down the codes it provides, and then hit run again. This may happen several times. Once it continues on to the level, you'll have all you need, so you can close down the debugger, however you may wish to leave it open to better locate what you want to change (see later section).
+
+These memory addresses are each different chunks that are loaded in. Load up the ROM in HxD, and press F3 to go to an offset. Type in the memory address minus the first digit. So instead of c3ad73, type 3ad73. This will jump you to the start of the section.
+
+Click and drag from that point downwards. We need to ensure we include the full segment. They usually end in 00 00 00. But that being said, it does not matter if you copy more than the segment (you can copy to the end of the file), just ensure enough is copied. You can press control+c to copy them.
+
+Open a new file in HxD and press control+v to paste in the contents, then save this as a new file in the same directory as the lisp programs.
+
+* Decompressing the files
+
+Open up a command prompt, and navigate to the directory containing the lisp programs, and the saved chunks:
+#+begin_src cli
+C:\Users\jungy> cd Desktop\sms
+C:\Users\jungy\Desktop\sms>
+#+end_src
+
+Run SBCL:
+#+begin_src cli
+C:\Users\jungy\Desktop\sms> sbcl
+*
+#+end_src
+
+Load the decoder, and move into the correct package:
+#+begin_src lisp
+(load "sms_converter.lisp")
+(in-package #:jupiter)
+#+end_src
+
+Lastly, run the decompress command. The first string is the file to decompress, and the second string is what you want to name the decompressed file:
+#+begin_src lisp
+(decompress-file "css_c3ad73.chr" "css_c3ad73.decompressed")
+#+end_src
+
+You can run the same command with names for each segment you copied. You can also leave this program running for the later steps.
+
+* Editing the file
+Open up YY-CHR. Use its open command, and be sure to select All Files, as it will not recognize the files we have created by default. Once you open the file, along the bottom there are tools to set the format. Set it to 4bpp SNES. You should now see the image of what you captured. You can edit it to the right. Note that with SNES graphics, the color palette is located elsewhere, so the colors will not reflect what was seen in the game here, but they are still the correct colors. One of the segments will have what you're looking to edit. If you need help finding it, you can always use the tile editor and sprite editor in the debugger tools of SMS. You can just click on the part of the screen you want to look into, and it will give you details on it.
+
+When you have made the changes you want, save the file. If it asks about inserting headers, say no. It needs to remain in its incomplete state.
+
+* Compressing the edited file
+Back in your sbcl session, for each newly saved file, you'll want to run the below command like the compression, first argument is the file you edited, and the second one is what to save it as.
+#+begin_src lisp
+(compress-file "css_c3ad73.modded" "css_c3ad73.compressed")
+#+end_src
+
+* Editing the ROM
+Home stretch. Open up the newly compressed file in HxD. Copy the entire file.
+
+Open back up the original ROM, and jump to the offset that this segment started with (for our example c3ad73). Make sure your cursor is at the start of this byte, then press control+b. This will paste the bytes in, overwriting the contents, rather than adding them to the file. If it asks if you want to increase the size of the file, you probably pressed control+v instead by mistake.
+
+Once you have changed these bytes, save the ROM.
+
+Try loading it up in an emulator and confirming your work!
