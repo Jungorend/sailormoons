@@ -49,6 +49,7 @@
   RTL
   MVN #$7F, #$7F
   RTL
+- Neptune's hand background chunk is at the 40000 point in the rom.
 
   JSR in instruction C3867c step over caused gong and tile viewer update
   83869A caused color palette update
@@ -70,47 +71,3 @@
     000808 is s-wram address
     1FEC
     8381D6
-
-    source address: c36d30
-    destination 7e2000
-    A 7E
-    X BEDA
-    Y starting value doesn't matter
-
-    1A is 2 bytes first time
-    Each segment is 16 bytes.
-    There is a 2 byte header, where each bit in theory can represent a byte. Bits are popped off one at a time. If it's 1, copy the byte directly.
-
-    If it's 0, then it's describing a more complex pattern.
-    0-1 appears to be a mass copy.
-
-    ** Loads a word, HHLL. If the first 3 bits of HH are 0, it jumps to CODE_C09265. Otherwise the iteration count is 2+first 3 bits of HH.
-    The top 5 bits are used to give a vector of where to pull from (current destination + vector, most commonly #$FF (-1)). LL is used for the low byte of the vector.
-
-    With CODE_C09265, it reads in a byte. If that byte is 0, we're done.
-    If it's 1, go back to loop. Not encountered in testing. Othrewise, 1+byte is the iteration count.
-
-    When copying, 3 bytes are used:
-    Direction byte:
-    | 7 6 5 4 3 | 2 1 0 |
-    | DIRECTION | ITER  |
-        ITER:
-        If iter is 1+, we iterate this +2 many with the smaller copy procedure.
-        If iter is 0, Load the next byte, ITER_BYTE
-        When the ITER_BYTE is 0:
-            End the graphics compression
-        When the ITER_BYTE is 1:
-            Proceed to the top of the header (this probably should never happen)
-        Greater than 1:
-            ITER_BYTE+1 bytes are copied
-        DIRECTION:
-        These are used for the higher bits of the vector to adjust where we start copying from. This is relative to the destination, so $FFFF will start copying from the prior byte.
-    Lower Direction byte:
-    | 7 6 5 4 3 2 1 0 |
-    | Lower Direction |
-        Lower Direction:
-        Combined with DIRECTION bits and some set 1s to form the vector:
-        | 1 1 1 D D D D D | L L L L L L L L |
-        This is added to the destination address in $03 to form the location to start copying bytes from. Each byte it pulls from the next one over.
-
-        Neptune's hand background chunk is at the 40000 point in the rom.

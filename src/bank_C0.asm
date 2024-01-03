@@ -6177,17 +6177,23 @@
                        STA.B $05                            ;C0919D|8505    |000005;  
                                                             ;      |        |      ;
 
-    ;; This seems to copy graphics data to RAM (which is then loaded into VRAM)
-    ;; Expects SEP #30 it seems
-    ;; $00: 3 bits = source
-    ;; $03: 2 bits = destination
-    ;; $05: 1 bits = DBR
-    ;;
-    ;; Used by function:
-    ;; When copying, $16 is the number of bytes to copy.
-    ;; Whenever a function pulls a value from source it increments it by that amount.
-    ;; $14 is the byte indicating where to copy from. It moves that many spaces from the current destination byte (eg $FF is -1)
-    ;; Likewise for destination with pushing values
+;;; This decompresses graphics from ROM to then be loaded into the PPU.
+;;; It expects 8-bit indices on call
+;;; $00-$02 (3) is set to the compressed data
+;;; $03-$04 (2) is set to the destination
+;;; $05     (1) is set the DBR
+;;;
+;;; Whenever the destination is pushed it automatically is updated further, likewise for source.
+;;; This function reads in a 2 byte header and stores it at $1A. Whenever it is used up,
+;;; a new header is pulled. The bits from this header dictate what to do.
+;;; 1 -> push the next byte in the source to the destination.
+;;; 0, 0 -> copy a small number of bytes already pushed to the destination (used to save space when a full byte is unnecessary)
+;;; 0, 1 -> copy a large number of bytes, or stop looping this routine
+;;;
+;;; More information on what each of these headers do is pulled from the source.
+;;; For copy operations the two used spaces are:
+;;; $14-$15 (2) -> this is a vector describing where to start copying from. EG #$FFFF is to copy from the prior byte
+;;; $16 is the number of bytes to copy
           DECOMPRESS_GRAPHICS_INIT: PHB                     ; Store DBR
                        LDA.B $05                            ; Load $05 into DBR
                        PHA
@@ -6196,21 +6202,21 @@
                        LDA.B [$00]                          ; Load a word by 24-bit pointer at $00
                        INC.B $00                            ; Increment the pointer by a word
                        INC.B $00
-                       STA.B $1A                            ; Store loaded word into $1A and $1B
-                       LDY.W #$0010                         ; Set Y to 16
+                       STA.B $1A                            ; Load initial word to header at $1A
+                       LDY.W #$0010                         ; Set Y to 16. Y is used to track remaining bits in header
 
 
-          .BASE_LOOP: LSR.B $1A                            ; Divide word by 2 (round down)
-                       DEY                                  ; Y--
-                       BNE .COPY_BYTE_UNCHANGED                      ; The below code runs after every 16 bytes copied
-                       LDA.B [$00]                          ; Load word from $00
-                       INC.B $00                            ; increment one word on $00
+          .BASE_LOOP: LSR.B $1A                             ; Pop a header bit
+                       DEY
+                       BNE .COPY_BYTE_UNCHANGED
+                       LDA.B [$00]                          ; Every time the header is used up, load a new one
                        INC.B $00
-                       STA.B $1A                            ; store loaded word into $1A
-                       LDY.W #$0010                         ; reset Y to 16
+                       INC.B $00
+                       STA.B $1A
+                       LDY.W #$0010
 
     ;; If the popped bit of $1A was 1, copy 1 byte over to destination,
-    ;; then return to C091B1
+    ;; then return to BASE_LOOP
           .COPY_BYTE_UNCHANGED: BCC .WHEN_HEADER_POPS_ZERO
                        SEP #$20
                        LDA.B [$00]
@@ -6221,50 +6227,63 @@
                        BRA .BASE_LOOP
 
     ;; When popped bit is 0
-          .WHEN_HEADER_POPS_ZERO: STZ.B $16                            ; $16 = 0
-                       LSR.B $1A                            ; Divide $1A by 2
-                       DEY                                  ; Y--;
-                       BNE .CHECK_FOR_SECOND_BIT                      ; Skip the next if Y is 0
-                       LDA.B [$00]                          ; Load [$00] into $1A then increment to the next word
-                       INC.B $00                            ; Set Y to 16
+          .WHEN_HEADER_POPS_ZERO: STZ.B $16                 ; Number of bytes to copy = 0
+                       LSR.B $1A
+                       DEY
+                       BNE .CHECK_FOR_SECOND_BIT
+                       LDA.B [$00]                          ; If header is used up, load a new one
+                       INC.B $00
                        INC.B $00
                        STA.B $1A
                        LDY.W #$0010
 
-          .CHECK_FOR_SECOND_BIT: BCS .MASS_COPY                      ; Jump if division was odd this time to C09218
-                       LSR.B $1A                            ; Divide $1A
-                       DEY                                  ; Decrement Y
-                       BNE .SMALL_COPY                      ; Skip the next if Y is 0
-                       LDA.B [$00]
-                       INC.B $00                            ; Load [$00] into $1A, increment $00 by 2, Y = 16
+          .CHECK_FOR_SECOND_BIT: BCS .MASS_COPY             ; Jump to mass copy if header was 0,1
+                       LSR.B $1A
+                       DEY
+                       BNE .SMALL_COPY
+                       LDA.B [$00]                          ; Every time the header is used up, load a new one
+                       INC.B $00
                        INC.B $00
                        STA.B $1A
                        LDY.W #$0010
 
     ;; Popped bits are 0, then 0, then X.
           .SMALL_COPY: ROL.B $16                            ; $16 now is 0000 0000X
-                       LSR.B $1A                            ;
-                       DEY                                  ; Y--;
-                       BNE .SMALL_COPY_PART_TWO                      ; Skip unless Y is 0
-                       LDA.B [$00]                          ; Load next word
-                       INC.B $00                            ; increment $0 by 2
+                       LSR.B $1A
+                       DEY
+                       BNE .SMALL_COPY_PART_TWO
+                       LDA.B [$00]                          ; If header is used up, load a new one
                        INC.B $00
-                       STA.B $1A                            ; Store this new value in $1A
-                       LDY.W #$0010                         ; Y = 16 again
-                                                            ;      |        |      ;
+                       INC.B $00
+                       STA.B $1A
+                       LDY.W #$0010
+
     ;; Pops another bit, for 0,0,X,Y.
-          .SMALL_COPY_PART_TWO: ROL.B $16                            ; $16 = 0000 00XY
+    ;; iteration is 2 bits of header + 2
+    ;; one byte is loaded to be the destination
+          .SMALL_COPY_PART_TWO: ROL.B $16                   ; $16 = 0000 00XY
                        INC.B $16                            ; Add 2 to $16
-                       INC.B $16                            ;
-                       LDA.B [$00]                          ; Store just the next byte of $0 in $14
-                       ORA.W #$FF00                         ; increment $0
-                       STA.B $14                            ; Always $FF in the upper byte, then the byte loaded for lower.
+                       INC.B $16
+                       LDA.B [$00]                          ; Store just the next byte of $0 in $14, ZZ
+                       ORA.W #$FF00
+                       STA.B $14                            ; $14 = #$FFZZ
                        INC.B $00
-                       BRA .PREPARE_COPY                      ; Jump to C09240
-                                                            ;      |        |      ;  
-                                                            ;      |        |      ;
-    ;; Popped bits are 0 then 1
-    ;; Here is the crazy part
+                       BRA .PREPARE_COPY
+
+                                                          
+    ;; Popped bits are 0 then 1 -- Large Copy
+    ;; Loads in 2 bytes.
+    ;; Lower byte:
+    ;; LLLL LLLL
+    ;; Upper byte
+    ;; DDDD DIII
+    ;;
+    ;; I will be 0 if the iteration count uses its byte pulled in LOAD_ITERATION_BYTE
+    ;; otherwise add 2 to I and store it in $16 for the number of copies to make
+    ;;
+    ;; Then the direction vector combines the remaining like this:
+    ;; 111D DDDD LLLL LLLL
+    ;; Note the most significant 3 will always be 1.
           .MASS_COPY: LDA.B [$00]                          ; Pull word from source
                        INC.B $00
                        INC.B $00
@@ -6284,17 +6303,17 @@
                        REP #$20
                        LDA.B $12                            ; Loading into A o2 o1
                        AND.W #$0007                         ; Ignore all but $000 1101b
-                       BEQ .LOAD_ITERATION_BYTE                      ;C0923A|F029    |C09265;
-                       INC A                                ;C0923C|1A      |      ;  
-                       INC A                                ;C0923D|1A      |      ;  
-                       STA.B $16                            ;C0923E|8516    |000016;  
+                       BEQ .LOAD_ITERATION_BYTE
+                       INC A                                ; If III isn't 0, add 2 and set to $16
+                       INC A
+                       STA.B $16
 
     ;; Sets up the copy in the next function
     ;; $14 is used to move where to start copying bytes from
     ;; $16 is the number of bytes to copy
-          .PREPARE_COPY: LDA.B $03                            ; Load destination address
+          .PREPARE_COPY: LDA.B $03                          ; Load destination address
                        CLC
-                       ADC.B $14                            ; add $14 word to it
+                       ADC.B $14                            ; add $14 word to it (subtract a number of spaces)
                        STA.B $06                            ; Store to $06 as new destination
                        PHY                                  ; tmp save value of current header
                        LDY.W #$0000                         ; Y = 0
@@ -6302,18 +6321,18 @@
                        STY.B $16                            ; Set $16 to 0
                        SEP #$20
 
-          .COPY_LOOP: LDA.B ($06),Y                        ; Read in new source+index byte
+          .COPY_LOOP: LDA.B ($06),Y                         ; Read in new source+index byte
                        STA.B ($03),Y                        ; Store to destination+index byte
                        INY
                        DEX                                  ; inc index
-                       BNE .COPY_LOOP                      ; jump back to C09251 X times
+                       BNE .COPY_LOOP                       ; jump back to C09251 X times
                        REP #$20
                        TYA                                  ; A is now the number of iterations just performed
                        CLC
                        ADC.B $03                            ; Update destination pointer to beyond copied bytes
                        STA.B $03
                        PLY                                  ; Restore prior header value to Y
-                       JMP.W .BASE_LOOP                    ; Return to base header reader loop
+                       JMP.W .BASE_LOOP                     ; Return to base header reader loop
 
 
     ;; These next two functions load a byte (iteration_count)
@@ -6333,19 +6352,22 @@
                        BRA .PREPARE_COPY
 
                                                     
-          .FINISH_GRAPHICS_DECOMPRESSION: PLB                                  ;C0927B|AB      |      ;
-                       RTS                                  ;C0927C|60      |      ;  
-                                                            ;      |        |      ;  
-                       PHP                                  ;C0927D|08      |      ;  
-                       PHB                                  ;C0927E|8B      |      ;  
-                       PHK                                  ;C0927F|4B      |      ;  
-                       PLB                                  ;C09280|AB      |      ;  
-                       JSR.W DECOMPRESS_GRAPHICS_INIT                    ;C09281|209F91  |C0919F;
-                       PLB                                  ;C09284|AB      |      ;  
-                       PLP                                  ;C09285|28      |      ;  
-                       RTL                                  ;C09286|6B      |      ;  
-                                                            ;      |        |      ;  
-                                                            ;      |        |      ;  
+          .FINISH_GRAPHICS_DECOMPRESSION: PLB
+                       RTS
+
+
+    ;; Definitely a useful point. This is how graphics decompression is called from outside this bank.
+    ;; C0927D
+                       PHP
+                       PHB
+                       PHK
+                       PLB
+                       JSR.W DECOMPRESS_GRAPHICS_INIT
+                       PLB
+                       PLP
+                       RTL
+
+                                                   
           CODE_C09287: REP #$20                             ;C09287|C220    |      ;  
                        SEP #$10                             ;C09289|E210    |      ;  
                        LDY.B #$18                           ;C0928B|A018    |      ;  

@@ -47,11 +47,11 @@ This is the start of the decompression routine. All compressed functions pass th
 
 Then go ahead and proceed to the level you wanted to load. The game should freeze--this means it hit the breakpoint we set earlier. Open up your memory editor and make a note of the very first 3 bytes (Each byte will be two digits and/or letters).
 
-Write this down somewhere, but with the bytes in reverse order. For example, if you saw 73 ad c3, write down c3ad73.
+Write this down somewhere, but with the bytes in reverse order. For example, if you saw 30 6d c3, write down c36d30.
 
 Hit the run button on the debugger. If it freezes again, continue the process of writing down the codes it provides, and then hit run again. This may happen several times. Once it continues on to the level, you'll have all you need, so you can close down the debugger, however you may wish to leave it open to better locate what you want to change (see later section).
 
-These memory addresses are each different chunks that are loaded in. Load up the ROM in HxD, and press F3 to go to an offset. Type in the memory address minus the first digit. So instead of c3ad73, type 3ad73. This will jump you to the start of the section.
+These memory addresses are each different chunks that are loaded in. Load up the ROM in HxD, and press F3 to go to an offset. Type in the memory address minus the first digit. So instead of c36d30, type 3ad73. This will jump you to the start of the section.
 
 Click and drag from that point downwards. We need to ensure we include the full segment. They usually end in 00 00 00. But that being said, it does not matter if you copy more than the segment (you can copy to the end of the file), just ensure enough is copied. You can press control+c to copy them.
 
@@ -79,7 +79,7 @@ Load the decoder, and move into the correct package:
 
 Lastly, run the decompress command. The first string is the file to decompress, and the second string is what you want to name the decompressed file:
 #+begin_src lisp
-(decompress-file "css_c3ad73.chr" "css_c3ad73.decompressed")
+(decompress-file "css_c36d30.chr" "css_c36d30.decompressed")
 #+end_src
 
 You can run the same command with names for each segment you copied. You can also leave this program running for the later steps.
@@ -92,13 +92,13 @@ When you have made the changes you want, save the file. If it asks about inserti
 * Compressing the edited file
 Back in your sbcl session, for each newly saved file, you'll want to run the below command like the compression, first argument is the file you edited, and the second one is what to save it as.
 #+begin_src lisp
-(compress-file "css_c3ad73.modded" "css_c3ad73.compressed")
+(compress-file "css_c36d30.modded" "css_c36d30.compressed")
 #+end_src
 
 * Editing the ROM
 Home stretch. Open up the newly compressed file in HxD. Copy the entire file.
 
-Open back up the original ROM, and jump to the offset that this segment started with (for our example c3ad73). Make sure your cursor is at the start of this byte, then press control+b. This will paste the bytes in, overwriting the contents, rather than adding them to the file. If it asks if you want to increase the size of the file, you probably pressed control+v instead by mistake.
+Open back up the original ROM, and jump to the offset that this segment started with (for our example c36d30). Make sure your cursor is at the start of this byte, then press control+b. This will paste the bytes in, overwriting the contents, rather than adding them to the file. If it asks if you want to increase the size of the file, you probably pressed control+v instead by mistake.
 
 Once you have changed these bytes, save the ROM.
 
