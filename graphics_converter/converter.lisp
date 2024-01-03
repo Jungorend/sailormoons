@@ -14,8 +14,8 @@
 
 (defun store-word (word vector)
   "Pushes a word little-endian style into vector"
-  (vector-push-extend (ldb (byte 8 8) word) vector)
-  (vector-push-extend (ldb (byte 8 0) word) vector))
+  (vector-push-extend (ldb (byte 8 0) word) vector)
+  (vector-push-extend (ldb (byte 8 8) word) vector))
 
 (defun load-file (filename offset length)
   (with-open-file (s filename

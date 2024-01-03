@@ -31,8 +31,8 @@
 
 (defun store-word (word vector)
   "Pushes a word little-endian style into vector"
-  (vector-push-extend (ldb (byte 8 8) word) vector)
-  (vector-push-extend (ldb (byte 8 0) word) vector))
+  (vector-push-extend (ldb (byte 8 0) word) vector)
+  (vector-push-extend (ldb (byte 8 8) word) vector))
 
 (defun replace-word (word vector index)
   "Replaces the segment at index with the new word"
@@ -65,7 +65,7 @@
         (push-bit-to-header (ldb (byte 1 0) iter))
         (vector-push-extend source *compressed-stream*))
       (let ((iter (- iteration-count 1))
-            (source (dpb 0 (byte 3 0)
+            (source (dpb 0 (byte 3 8)
                          (dpb 7 (byte 3 13) (+ #x10000 start-vector)))))
         (push-bit-to-header 0)
         (push-bit-to-header 1)
@@ -92,7 +92,7 @@
   "Returns an integer for the number of times it repeats."
   (if (equal repeat-bytes (take (length repeat-bytes) tile))
       (repeat-count repeat-bytes (drop (length repeat-bytes) tile) (+ result 1))
-      (min result 255)))
+      result))
 
 (defun look-for-copies (current-tile)
   "Returns a list of (width count) of the width with the most copies."
@@ -100,7 +100,7 @@
             (if (>= (second new-value) (second current-max))
                 new-value
                 current-max))
-          (loop for i from 1 to 4
+          (loop for i from 1 to 16
                 for bytes = (take i current-tile)
                 collect (list i (repeat-count bytes current-tile)))
           :initial-value '(0 0)))
@@ -110,7 +110,7 @@
     (cond ((> (second best-copy) 2)
           (progn
             (dotimes (iter (first best-copy)) (push-byte-to-stream (nth iter current-tile)))
-            (copy-bytes-to-stream (- (first best-copy)) (second best-copy))
+            (copy-bytes-to-stream (- (first best-copy)) (* (first best-copy)(second best-copy)))
             (drop (* (first best-copy) (+ 1 (second best-copy))) current-tile)))
 
       ((not (null current-tile))
@@ -119,14 +119,13 @@
         (rest current-tile)))
 
       ('otherwise
-       (progn
-         (push-end-to-stream)
-         nil)))))
+       nil))))
 
 (defun main-loop (graphics-data)
   (let ((remaining-data (calculate-next-action graphics-data)))
-    (when remaining-data
-        (main-loop remaining-data))))
+    (if remaining-data
+        (main-loop remaining-data)
+        (push-end-to-stream))))
 
 (defun compress-file (filename destination-filename)
   (let ((decompressed-stream (with-open-file (in filename
@@ -142,7 +141,7 @@
                                 :if-exists :overwrite
                                 :if-does-not-exist :create)
           (loop for i from 0 to (length *compressed-stream*)
-                do (write-byte i output)))))
+                do (write-byte (aref *compressed-stream* i) output)))))
 
 ; Test
 ; Big concern is I think my iteration bytes + count is off by one potentially
@@ -157,3 +156,11 @@
         collect byte))
 
 (compress-file "test.dc" "recompressed")
+
+;; Test
+(defparameter test-data nil)
+(setf test-data '(#xAA #xAA #x55 #x55 #xAA #xAA #x55 #x55 #xAA #xAA #x55 #x55 #xAA #xAA #x55 #x55 #x55 #x00 #xAA #x00 #x55 #x00 #xAA #x00 #x55 #x00 #xAA #x00 #x55 #x00 #xAA #x00))
+
+(defun display-stream ()
+  (loop for i from 0 upto (- (length *compressed-stream*) 1)
+        do (format t "~X " (aref *compressed-stream* i))))
