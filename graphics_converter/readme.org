@@ -1,12 +1,3 @@
-* fun things
-Guh huh jupiter saying it is as easy as 1,2,3,4...217...
-
-why lisp?
-
-I test in production
-
-this step reminds me of my senpai who spurned me back on page 3
-
 * Prerequisites
 I am going to list here a few tools. You can use your own if you have a preference, but my instructions will be under the assumption you're using what I listed below, so you may need to substitute for the equivalent in whatever you use.
 There are a few tools that are necessary to edit SNES ROMs.
