@@ -31,14 +31,6 @@
   (setf (aref vector index) (ldb (byte 8 0) word)
         (aref vector (+ 1 index)) (ldb (byte 8 8) word)))
 
-(defun load-file (filename offset length) ; Not yet used
-  (with-open-file (s filename
-                     :element-type '(unsigned-byte 8))
-    (when (>= (file-length s) (+ offset length))
-      (file-position s offset)
-      (loop for i from 1 to length
-            do (vector-push-extend (read-byte s) *compressed-stream*)))))
-
 (defun copy-byte (stream vector)
   "Pushes a single byte into vector"
   (vector-push-extend (read-byte stream) vector))
@@ -110,7 +102,7 @@
   (when (decompress-next-action stream header decompressed-data)
     (decompress-main-loop stream header decompressed-data)))
 
-(defun decompress-file (filename destination-filename)
+(defun decompress-file (filename destination-filename &optional offset)
   (with-open-file (s filename
                        :element-type '(unsigned-byte 8))
     (let ((decompressed-data (make-array 0
@@ -118,6 +110,7 @@
                                        :adjustable t
                                        :fill-pointer 0))
           (header (pull-header s)))
+      (when offset (file-position s offset))
       (decompress-main-loop s header decompressed-data)
       (with-open-file (out destination-filename
                            :direction :output
@@ -228,3 +221,28 @@
                                 :if-does-not-exist :create)
           (loop for i from 0 to (- (length *compressed-stream*) 1)
                 do (write-byte (aref *compressed-stream* i) output)))))
+
+(defun compress-new-file (original-file graphics-data new-file offset)
+  (let ((decompressed-stream (with-open-file (in graphics-data
+                                                 :element-type '(unsigned-byte 8))
+                               (loop for byte = (read-byte in nil)
+                                     while byte
+                                     collect byte)))
+        (orig-file-stream (with-open-file (in original-file
+                                              :element-type '(unsigned-byte 8))
+                            (loop for byte = (read-byte in nil)
+                                  while byte
+                                  collect byte))))
+    (with-open-file (output new-file
+                            :direction :output
+                            :element-type '(unsigned-byte 8)
+                            :if-exists :overwrite
+                            :if-does-not-exist :create)
+      (make-compressed-stream)
+      (compress-main-loop decompressed-stream)
+      (loop for i from 1 to offset
+            do (write-byte (nth (- i 1) orig-file-stream) output))
+      (loop for i from 0 to (- (length *compressed-stream*) 1)
+            do (write-byte (aref *compressed-stream* i) output))
+      (loop for i from (+ offset (length *compressed-stream*)) to (- (length orig-file-stream) 1)
+            do (write-byte (nth i orig-file-stream) output)))))
