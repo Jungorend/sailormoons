@@ -6177,7 +6177,7 @@
                        STA.B $05                            ;C0919D|8505    |000005;  
                                                             ;      |        |      ;
 
-;;; This decompresses graphics from ROM to then be loaded into the PPU.
+;;; This decompresses graphics from ROM to then be loaded into the PPU. C0919F
 ;;; It expects 8-bit indices on call
 ;;; $00-$02 (3) is set to the compressed data
 ;;; $03-$04 (2) is set to the destination

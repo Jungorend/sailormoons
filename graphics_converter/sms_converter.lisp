@@ -37,7 +37,7 @@
     (when (>= (file-length s) (+ offset length))
       (file-position s offset)
       (loop for i from 1 to length
-            do (vector-push-extend (read-byte s) *compressed-data*)))))
+            do (vector-push-extend (read-byte s) *compressed-stream*)))))
 
 (defun copy-byte (stream vector)
   "Pushes a single byte into vector"
@@ -124,7 +124,7 @@
                            :element-type '(unsigned-byte 8)
                            :if-exists :overwrite
                            :if-does-not-exist :create)
-        (loop for i from 0 to (length decompressed-data)
+        (loop for i from 0 to (- (length decompressed-data) 1)
               do (write-byte (aref decompressed-data i) out))))))
 
 ;; Compression functions
@@ -226,5 +226,5 @@
                                 :element-type '(unsigned-byte 8)
                                 :if-exists :overwrite
                                 :if-does-not-exist :create)
-          (loop for i from 0 to (length *compressed-stream*)
+          (loop for i from 0 to (- (length *compressed-stream*) 1)
                 do (write-byte (aref *compressed-stream* i) output)))))
