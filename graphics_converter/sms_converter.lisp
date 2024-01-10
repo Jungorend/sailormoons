@@ -191,20 +191,22 @@ Width being a set of repeat values to copy over and over."
           :initial-value '(0 0)))
 
 (defun compress-next-action (current-tile)
-  (let ((best-copy (look-for-copies current-tile)))
-    (cond ((> (second best-copy) 2)
-          (progn
-            (dotimes (iter (first best-copy)) (push-byte-to-stream (nth iter current-tile)))
-            (copy-bytes-to-stream (- (first best-copy)) (* (first best-copy) (second best-copy)))
-            (drop (* (first best-copy) (+ 1 (second best-copy))) current-tile)))
+  (let* ((best-copy (look-for-copies current-tile))
+         (byte-width (first best-copy))
+         (iteration-count (second best-copy)))
+    (cond ((> iteration-count 2)
+           (progn
+             (dotimes (iter byte-width) (push-byte-to-stream (nth iter current-tile)))
+             (copy-bytes-to-stream (- byte-width) (* byte-width iteration-count))
+             (drop (* byte-width (+ iteration-count 1)) current-tile)))
 
-      ((not (null current-tile))
-      (progn
-        (push-byte-to-stream (first current-tile))
-        (rest current-tile)))
+          ((not (null current-tile))
+           (progn
+             (push-byte-to-stream (first current-tile))
+             (rest current-tile)))
 
-      ('otherwise
-       nil))))
+          ('otherwise
+           nil))))
 
 (defun compress-main-loop (graphics-data)
   (let ((remaining-data (compress-next-action graphics-data)))
