@@ -108,10 +108,9 @@
     (let ((decompressed-data (make-array 0
                                        :element-type '(vector (unsigned-byte 8))
                                        :adjustable t
-                                       :fill-pointer 0))
-          (header (pull-header s)))
+                                       :fill-pointer 0)))
       (when offset (file-position s offset))
-      (decompress-main-loop s header decompressed-data)
+      (decompress-main-loop s (pull-header s) decompressed-data)
       (with-open-file (out destination-filename
                            :direction :output
                            :element-type '(unsigned-byte 8)
