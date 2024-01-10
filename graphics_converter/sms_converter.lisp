@@ -116,8 +116,8 @@
                            :element-type '(unsigned-byte 8)
                            :if-exists :overwrite
                            :if-does-not-exist :create)
-        (loop for i from 0 to (- (length decompressed-data) 1)
-              do (write-byte (aref decompressed-data i) out))))))
+        (loop for i across decompressed-data
+              do (write-byte i out))))))
 
 ;; Compression functions
 (defun make-compressed-stream ()
@@ -164,11 +164,13 @@
   (push-bit-to-header 0)
   (push-bit-to-header 1)
   (store-word 0 *compressed-stream*)
+  (vector-push-extend 0 *compressed-stream*)
   (replace-word (bits *current-header*) *compressed-stream* (stream-position *current-header*)))
 
 (defun repeat-count (repeat-bytes tile &optional (result -1))
   "Returns an integer for the number of times it repeats."
-  (if (equal repeat-bytes (take (length repeat-bytes) tile))
+  (if (and (equal repeat-bytes (take (length repeat-bytes) tile))
+           (< (* (length repeat-bytes) result) 256)) ; cannot have more than 256 iterations max in a copy
       (repeat-count repeat-bytes (drop (length repeat-bytes) tile) (+ result 1))
       result))
 
@@ -188,7 +190,7 @@
     (cond ((> (second best-copy) 2)
           (progn
             (dotimes (iter (first best-copy)) (push-byte-to-stream (nth iter current-tile)))
-            (copy-bytes-to-stream (- (first best-copy)) (* (first best-copy)(second best-copy)))
+            (copy-bytes-to-stream (- (first best-copy)) (* (first best-copy) (second best-copy)))
             (drop (* (first best-copy) (+ 1 (second best-copy))) current-tile)))
 
       ((not (null current-tile))
@@ -227,11 +229,14 @@
                                (loop for byte = (read-byte in nil)
                                      while byte
                                      collect byte)))
-        (orig-file-stream (with-open-file (in original-file
-                                              :element-type '(unsigned-byte 8))
-                            (loop for byte = (read-byte in nil)
-                                  while byte
-                                  collect byte))))
+        (orig-file-stream (make-array 0 :element-type '(vector (unsigned-byte 8))
+                                        :adjustable t
+                                        :fill-pointer 0)))
+    (with-open-file (in original-file
+                        :element-type '(unsigned-byte 8))
+      (loop for byte = (read-byte in nil)
+            while byte
+            do (vector-push-extend byte orig-file-stream)))
     (with-open-file (output new-file
                             :direction :output
                             :element-type '(unsigned-byte 8)
@@ -240,8 +245,8 @@
       (make-compressed-stream)
       (compress-main-loop decompressed-stream)
       (loop for i from 1 to offset
-            do (write-byte (nth (- i 1) orig-file-stream) output))
-      (loop for i from 0 to (- (length *compressed-stream*) 1)
-            do (write-byte (aref *compressed-stream* i) output))
+            do (write-byte (aref orig-file-stream (- i 1)) output))
+      (loop for i across *compressed-stream*
+            do (write-byte i output))
       (loop for i from (+ offset (length *compressed-stream*)) to (- (length orig-file-stream) 1)
-            do (write-byte (nth i orig-file-stream) output)))))
+            do (write-byte (aref orig-file-stream i) output)))))
