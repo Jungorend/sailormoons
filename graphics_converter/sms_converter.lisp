@@ -44,15 +44,13 @@
             (index header) 0))
     bit))
 
-(defun take (n list &optional (result '()))
-  (if (= n 0)
-      (reverse result)
-      (take (- n 1) (rest list) (cons (first list) result))))
+(defun take (n sequence &aux (length (length sequence)))
+  (unless (> n length)
+    (subseq sequence 0 n)))
 
-(defun drop (n list)
-  (if (= n 0)
-      list
-      (drop (- n 1) (rest list))))
+(defun drop (n sequence &aux (length (length sequence)))
+  (unless (> n length)
+    (subseq sequence n length)))
 
 ;; Decompressor functions
 (defun pull-header (stream)
@@ -104,16 +102,16 @@
 
 (defun decompress-file (filename destination-filename &optional offset)
   (with-open-file (s filename
-                       :element-type '(unsigned-byte 8))
+                       :element-type 'octet)
     (let ((decompressed-data (make-array 0
-                                       :element-type '(vector (unsigned-byte 8))
+                                       :element-type '(vector octet)
                                        :adjustable t
                                        :fill-pointer 0)))
       (when offset (file-position s offset))
       (decompress-main-loop s (pull-header s) decompressed-data)
       (with-open-file (out destination-filename
                            :direction :output
-                           :element-type '(unsigned-byte 8)
+                           :element-type 'octet
                            :if-exists :overwrite
                            :if-does-not-exist :create)
         (loop for i across decompressed-data
@@ -121,6 +119,7 @@
 
 ;; Compression functions
 (defun make-compressed-stream ()
+  "This clears out the header and stream variables. Used to initialize compression attempts."
   (setf *current-header* (make-instance 'graphics-header :word #x0000)
         *compressed-stream* (make-array 0 :element-type '(vector octet)
                                           :adjustable t
@@ -128,6 +127,7 @@
   (store-word #x0000 *compressed-stream*))
 
 (defun push-bit-to-header (bit)
+  "Insert the next available bit into the header and inserts new headers as needed."
   (setf (bits *current-header*)
         (dpb bit (byte 1 (index *current-header*)) (bits *current-header*)))
   (incf (index *current-header*))
@@ -140,10 +140,12 @@
               (stream-position new-header) new-position))))
 
 (defun push-byte-to-stream (byte)
+  "Put the next byte onto the compressed stream directly."
   (push-bit-to-header 1)
   (vector-push-extend byte *compressed-stream*))
 
 (defun copy-bytes-to-stream (start-vector iteration-count)
+  "When informing that the next iteration-count bytes are copied, puts on the stream."
   (if (< iteration-count 6)
       (let ((iter (- iteration-count 2))
             (source (ldb (byte 8 0)(+ #x100 start-vector))))
@@ -161,6 +163,7 @@
         (vector-push-extend iter *compressed-stream*))))
 
 (defun push-end-to-stream ()
+  "The set of bits to inform that the graphics data is complete. Appended after everything else."
   (push-bit-to-header 0)
   (push-bit-to-header 1)
   (store-word 0 *compressed-stream*)
@@ -168,14 +171,16 @@
   (replace-word (bits *current-header*) *compressed-stream* (stream-position *current-header*)))
 
 (defun repeat-count (repeat-bytes tile &optional (result -1))
-  "Returns an integer for the number of times it repeats."
+  "Returns an integer for the number of times it repeats.
+Set to never let more than 256 iterations due to limitations in how many copies can be done."
   (if (and (equal repeat-bytes (take (length repeat-bytes) tile))
            (< (* (length repeat-bytes) result) 256)) ; cannot have more than 256 iterations max in a copy
       (repeat-count repeat-bytes (drop (length repeat-bytes) tile) (+ result 1))
       result))
 
 (defun look-for-copies (current-tile)
-  "Returns a list of (width count) of the width with the most copies."
+  "Returns a list of (width count) of the width with the most copies.
+Width being a set of repeat values to copy over and over."
   (reduce (lambda (current-max new-value)
             (if (>= (second new-value) (second current-max))
                 new-value
@@ -209,7 +214,7 @@
 
 (defun compress-file (filename destination-filename)
   (let ((decompressed-stream (with-open-file (in filename
-                                                 :element-type '(unsigned-byte 8))
+                                                 :element-type 'octet)
                                (loop for byte = (read-byte in nil)
                                      while byte
                                      collect byte))))
@@ -217,29 +222,33 @@
         (compress-main-loop decompressed-stream)
         (with-open-file (output destination-filename
                                 :direction :output
-                                :element-type '(unsigned-byte 8)
+                                :element-type 'octet
                                 :if-exists :overwrite
                                 :if-does-not-exist :create)
           (loop for i from 0 to (- (length *compressed-stream*) 1)
                 do (write-byte (aref *compressed-stream* i) output)))))
 
 (defun compress-new-file (original-file graphics-data new-file offset)
+  "This compresses a 4bpp SNES graphics data into the SMS compressed format.
+Original file is the ROM we're copying the graphics data into. Offset is point to copy it into.
+
+It will then create new-file with the characters replaced."
   (let ((decompressed-stream (with-open-file (in graphics-data
-                                                 :element-type '(unsigned-byte 8))
+                                                 :element-type 'octet)
                                (loop for byte = (read-byte in nil)
                                      while byte
                                      collect byte)))
-        (orig-file-stream (make-array 0 :element-type '(vector (unsigned-byte 8))
+        (orig-file-stream (make-array 0 :element-type '(vector octet)
                                         :adjustable t
                                         :fill-pointer 0)))
     (with-open-file (in original-file
-                        :element-type '(unsigned-byte 8))
+                        :element-type 'octet)
       (loop for byte = (read-byte in nil)
             while byte
             do (vector-push-extend byte orig-file-stream)))
     (with-open-file (output new-file
                             :direction :output
-                            :element-type '(unsigned-byte 8)
+                            :element-type 'octet
                             :if-exists :overwrite
                             :if-does-not-exist :create)
       (make-compressed-stream)
