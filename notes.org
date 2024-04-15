@@ -50,6 +50,17 @@
   MVN #$7F, #$7F
   RTL
 - Neptune's hand background chunk is at the 40000 point in the rom.
+- $80EB8C is the function that swaps music. Pass in a different value to A register to get a different song.
+- ECE7 is the stage music section. Multiple entries for one level.
+  - e79048: chibi/crystal tokyo evening
+  - e74225/e7b2c3: moon: Silver castle
+  - e77421: space-time pluto
+  - e788b1 e7be64: seaside port neptune
+  - e74d65: mercury/fountain day
+  - e760db e7a521: gamecenter/jupiter
+  - e7582d e7b2c3: rei/shrine
+  - e76a15 e7a521: venus/crystal tokyo night
+  - e77f56 e7a521: fountain night/uranus
 
   JSR in instruction C3867c step over caused gong and tile viewer update
   83869A caused color palette update
@@ -71,3 +82,10 @@
     000808 is s-wram address
     1FEC
     8381D6
+* How I did it
+** Silent mode
+- Change two values:
+  $80E401 and $80E1CE
+  change these from A5 A2 to A9 01
+  LDA #A2 -> LDA #$01
+  (1 is no music in the music switcher)
