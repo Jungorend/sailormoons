@@ -13854,10 +13854,13 @@ UNREACH_C0EAD8: LDA.W $1049
                        PLB                                  ;C0ECE5|AB      |      ;  
                        RTL                                  ;C0ECE6|6B      |      ;  
                                                             ;      |        |      ;  
-                                                            ;      |        |      ;  
+                                                            ;      |        |      ;
+                                                            ;
+    ;; Stage Music Selection Grid
+    ;;
                        db $FF,$FF,$00,$FF,$FF,$00,$FF,$FF   ;C0ECE7|        |FF00FF;  
-                       db $00,$FF,$FF,$00,$19,$1C,$E7,$21   ;C0ECEF|        |      ;  
-                       db $A5,$E7,$04,$26,$E7,$FF,$FF,$00   ;C0ECF7|        |0000E7;  
+    db $00,$FF,$FF
+    db $00,$19,$1C,$E7,$21 $A5,$E7,$04,$26,$E7,$FF,$FF,$00
                        db $FF,$FF,$00,$FF,$FF,$00,$35,$2C   ;C0ECFF|        |FF00FF;  
                        db $E7,$C3,$B2,$E7,$FD,$2E,$E7,$C3   ;C0ED07|        |0000C3;  
                        db $B2,$E7,$8C,$32,$E7,$FF,$FF,$00   ;C0ED0F|        |0000E7;  
