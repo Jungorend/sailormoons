@@ -13860,7 +13860,7 @@ UNREACH_C0EAD8: LDA.W $1049
     ;;
                        db $FF,$FF,$00,$FF,$FF,$00,$FF,$FF   ;C0ECE7|        |FF00FF;  
     db $00,$FF,$FF
-    db $00,$19,$1C,$E7,$21 $A5,$E7,$04,$26,$E7,$FF,$FF,$00
+    db $00,$19,$1C,$E7,$21,$A5,$E7,$04,$26,$E7,$FF,$FF,$00
                        db $FF,$FF,$00,$FF,$FF,$00,$35,$2C   ;C0ECFF|        |FF00FF;  
                        db $E7,$C3,$B2,$E7,$FD,$2E,$E7,$C3   ;C0ED07|        |0000C3;  
                        db $B2,$E7,$8C,$32,$E7,$FF,$FF,$00   ;C0ED0F|        |0000E7;  
